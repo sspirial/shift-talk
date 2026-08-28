@@ -1,0 +1,17 @@
+{
+  "name": "Shift Talk — Factory Floor Language Trainer",
+  "short_name": "Shift Talk",
+  "description": "Factory-floor Mandarin, Japanese, and Korean vocabulary trainer for EPZ job seekers.",
+  "start_url": "./shift-talk.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B1E21",
+  "theme_color": "#1B1E21",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
