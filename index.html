@@ -419,6 +419,59 @@ html, body {
   line-height: 1.5;
 }
 
+/* ---------- sync panel ---------- */
+.st-sync {
+  margin-top: 22px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 4px 14px;
+  background: var(--surface);
+}
+.st-sync summary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--yellow);
+  padding: 12px 0;
+  cursor: pointer;
+}
+.st-sync-body { padding-bottom: 16px; }
+.st-sync-body p {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 0 0 10px;
+}
+.st-sync-row { margin-bottom: 8px; }
+.st-sync-textarea {
+  width: 100%;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 10px;
+  resize: vertical;
+}
+.st-sync-divider {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 16px 0 8px;
+  border-top: 1px dashed var(--line);
+  padding-top: 14px;
+}
+.st-sync-msg {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 8px;
+}
+.st-sync-msg.ok { color: var(--green); }
+.st-sync-msg.err { color: var(--red); }
+
 /* ---------- flashcard ---------- */
 .st-card-wrap {
   perspective: 1200px;
@@ -478,8 +531,7 @@ html, body {
 }
 
 .st-speak-btn {
-  position: absolute;
-  top: 56px; right: 12px;
+  position: static;
   width: 34px; height: 34px;
   border-radius: 50%;
   background: var(--yellow);
@@ -490,15 +542,15 @@ html, body {
   justify-content: center;
   font-size: 15px;
   cursor: pointer;
+  margin: 16px auto 0;
   transition: transform 0.12s, background 0.12s;
 }
 .st-speak-btn:hover { transform: scale(1.08); }
 .st-speak-btn.speaking { background: var(--orange); animation: st-pulse 0.6s ease-in-out infinite alternate; }
 .st-speak-btn.inline {
-  position: static;
   width: 30px; height: 30px;
   font-size: 13px;
-  margin-left: 8px;
+  margin: 0 0 0 8px;
   flex-shrink: 0;
 }
 @keyframes st-pulse {
@@ -1044,10 +1096,24 @@ html, body {
     lastSpokenKey: null,
     speak: null,           // { idx, phase, result }
     listen: null,          // { idx, phase, result, typed }
+    syncPanelOpen: false,
+    syncMsg: null,          // { text, ok }
+    syncOutCode: null,
   };
   let activeRecognition = null;
 
   let progress = null; // loaded from storage
+  const LS_KEY = "shifttalk_progress";
+
+  function mergeProgressStructure(parsed) {
+    progress = Object.assign(defaultProgress(), parsed);
+    Object.keys(VOCAB).forEach(l => {
+      if (!progress.langs[l]) progress.langs[l] = {};
+      CATEGORY_ORDER.forEach(c => {
+        if (!progress.langs[l][c]) progress.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
+      });
+    });
+  }
 
   function defaultProgress() {
     const p = { streak: 0, lastVisit: null, langs: {} };
@@ -1061,22 +1127,23 @@ html, body {
   }
 
   async function loadProgress() {
+    let raw = null;
+    // Prefer the Claude artifact storage API when previewed inside claude.ai;
+    // fall back to plain localStorage for a standalone hosted deployment.
     try {
-      const res = await window.storage.get('progress', false);
-      if (res && res.value) {
-        const parsed = JSON.parse(res.value);
-        progress = Object.assign(defaultProgress(), parsed);
-        // ensure structure completeness
-        Object.keys(VOCAB).forEach(l => {
-          if (!progress.langs[l]) progress.langs[l] = {};
-          CATEGORY_ORDER.forEach(c => {
-            if (!progress.langs[l][c]) progress.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
-          });
-        });
+      if (window.storage && typeof window.storage.get === "function") {
+        const res = await window.storage.get('progress', false);
+        raw = res ? res.value : null;
       } else {
-        progress = defaultProgress();
+        raw = localStorage.getItem(LS_KEY);
       }
     } catch (e) {
+      try { raw = localStorage.getItem(LS_KEY); } catch (e2) { raw = null; }
+    }
+    if (raw) {
+      try { mergeProgressStructure(JSON.parse(raw)); }
+      catch (e) { progress = defaultProgress(); }
+    } else {
       progress = defaultProgress();
     }
     bumpStreak();
@@ -1094,9 +1161,31 @@ html, body {
   }
 
   async function saveProgress() {
+    const json = JSON.stringify(progress);
     try {
-      await window.storage.set('progress', JSON.stringify(progress), false);
-    } catch (e) { /* best effort */ }
+      if (window.storage && typeof window.storage.set === "function") {
+        await window.storage.set('progress', json, false);
+        return;
+      }
+    } catch (e) { /* fall through to localStorage */ }
+    try { localStorage.setItem(LS_KEY, json); } catch (e) { /* best effort */ }
+  }
+
+  // ---------------- cross-device sync code (no backend required) ----------------
+  function generateSyncCode() {
+    return btoa(unescape(encodeURIComponent(JSON.stringify(progress))));
+  }
+
+  function applySyncCode(code) {
+    try {
+      const json = decodeURIComponent(escape(atob(code.trim())));
+      const parsed = JSON.parse(json);
+      mergeProgressStructure(parsed);
+      saveProgress();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   function totalMastered() {
@@ -1194,6 +1283,23 @@ html, body {
 
       <div class="st-section-label">${lang.name} &mdash; Lesson Plates</div>
       <div class="st-plates">${platesHtml}</div>
+
+      <details class="st-sync" ${state.syncPanelOpen ? "open" : ""}>
+        <summary>Sync Progress Across Devices</summary>
+        <div class="st-sync-body">
+          <p>No account, no server — just a code you carry between phones.</p>
+          <div class="st-sync-row">
+            <button class="st-nav-btn" data-sync-generate="1">Get My Sync Code</button>
+          </div>
+          <textarea id="stSyncOut" class="st-sync-textarea" rows="3" readonly placeholder="Tap 'Get My Sync Code' above…">${state.syncOutCode ? esc(state.syncOutCode) : ""}</textarea>
+          <button class="st-nav-btn" data-sync-copy="1" style="margin-top:6px;">Copy Code</button>
+
+          <div class="st-sync-divider">On your other device, paste the code here:</div>
+          <textarea id="stSyncIn" class="st-sync-textarea" rows="3" placeholder="Paste sync code…"></textarea>
+          <button class="st-nav-btn" data-sync-apply="1" style="margin-top:6px;">Apply Code</button>
+          <div id="stSyncMsg" class="st-sync-msg ${state.syncMsg ? (state.syncMsg.ok ? 'ok' : 'err') : ''}">${state.syncMsg ? esc(state.syncMsg.text) : ""}</div>
+        </div>
+      </details>
     `;
   }
 
@@ -1209,10 +1315,10 @@ html, body {
       body = `
         <div class="st-card-wrap">
           <div class="st-card" data-flip="1" data-tag="${lang.code} &middot; ${idx + 1}/${cat.words.length}">
-            <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
             <div class="st-card-native">${esc(w.n)}</div>
             <div class="st-card-roman">${esc(w.r)}</div>
             ${state.flipped ? `<div class="st-card-english">${esc(w.e)}</div>` : `<div class="st-card-hint">Tap card to reveal meaning</div>`}
+            <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
           </div>
         </div>
         <div class="st-card-nav">
@@ -1286,10 +1392,10 @@ html, body {
 
     return `
       <div class="st-practice-card" data-tag="${lang.code} &middot; ${s.idx + 1}/${cat.words.length}">
-        <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
         <div class="st-card-native">${esc(w.n)}</div>
         <div class="st-card-roman">${esc(w.r)}</div>
         ${micHtml}
+        <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
       </div>
       <div class="st-practice-nav">
         <button class="st-nav-btn" data-speak-prev="1" ${s.idx === 0 ? "disabled" : ""}>&larr; Prev</button>
@@ -1340,10 +1446,10 @@ html, body {
     } else {
       body = `
         <div class="st-practice-card st-listen-reveal" data-tag="${lang.code} &middot; ${s.idx + 1}/${cat.words.length}">
-          <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
           <div class="st-card-native">${esc(w.n)}</div>
           <div class="st-card-roman">${esc(w.r)}</div>
           <div class="st-card-english">${esc(w.e)}</div>
+          <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
         </div>
       `;
     }
@@ -1594,6 +1700,42 @@ html, body {
     };
 
     maybeAutoSpeak();
+
+    // ---- Sync panel (home screen only) ----
+    const syncGenBtn = app.querySelector('[data-sync-generate]');
+    if (syncGenBtn) syncGenBtn.onclick = () => {
+      const out = app.querySelector('#stSyncOut');
+      const code = generateSyncCode();
+      state.syncOutCode = code;
+      state.syncPanelOpen = true;
+      if (out) out.value = code;
+    };
+    const syncCopyBtn = app.querySelector('[data-sync-copy]');
+    if (syncCopyBtn) syncCopyBtn.onclick = async () => {
+      const out = app.querySelector('#stSyncOut');
+      if (out && !out.value) { out.value = generateSyncCode(); state.syncOutCode = out.value; }
+      state.syncPanelOpen = true;
+      try {
+        await navigator.clipboard.writeText(out.value);
+        syncCopyBtn.textContent = "Copied!";
+        setTimeout(() => { syncCopyBtn.textContent = "Copy Code"; }, 1500);
+      } catch (e) {
+        out.select();
+      }
+    };
+    const syncApplyBtn = app.querySelector('[data-sync-apply]');
+    if (syncApplyBtn) syncApplyBtn.onclick = () => {
+      const input = app.querySelector('#stSyncIn');
+      const code = input ? input.value.trim() : "";
+      if (!code) return;
+      const ok = applySyncCode(code);
+      state.syncPanelOpen = true;
+      state.syncMsg = {
+        text: ok ? "Progress loaded from code." : "That code didn't look right — check you copied the whole thing.",
+        ok
+      };
+      render();
+    };
   }
 
   function maybeAutoSpeak() {
