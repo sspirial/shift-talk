@@ -12,6 +12,8 @@
 <meta name="apple-mobile-web-app-title" content="Shift Talk">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
 
@@ -471,6 +473,70 @@ html, body {
 }
 .st-sync-msg.ok { color: var(--green); }
 .st-sync-msg.err { color: var(--red); }
+
+.st-qr-wrap {
+  display: flex;
+  justify-content: center;
+  background: #ffffff;
+  padding: 14px;
+  border-radius: 8px;
+  margin: 14px 0;
+}
+.st-sync-fallback {
+  margin-top: 14px;
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+}
+.st-sync-fallback summary {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+/* ---------- QR scan overlay ---------- */
+.st-scan-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 11, 12, 0.95);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.st-scan-video {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 10px;
+  border: 2px solid var(--yellow);
+  background: #000;
+}
+.st-scan-status {
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  margin-top: 14px;
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.5;
+}
+.st-scan-cancel {
+  margin-top: 18px;
+  padding: 11px 22px;
+  border-radius: 5px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
 
 /* ---------- flashcard ---------- */
 .st-card-wrap {
@@ -1099,6 +1165,7 @@ html, body {
     syncPanelOpen: false,
     syncMsg: null,          // { text, ok }
     syncOutCode: null,
+    syncShowQr: false,
   };
   let activeRecognition = null;
 
@@ -1172,15 +1239,50 @@ html, body {
   }
 
   // ---------------- cross-device sync code (no backend required) ----------------
+  // Packs progress into a compact array (bitmask per category) so the code
+  // is short enough to render as a scannable QR code.
+  const SYNC_LANG_ORDER = ["zh", "ja", "ko"];
+
+  function packSyncData() {
+    const cats = [];
+    SYNC_LANG_ORDER.forEach(l => {
+      CATEGORY_ORDER.forEach(c => {
+        const p = progress.langs[l][c];
+        let bitmask = 0;
+        (p.mastered || []).forEach(idx => { if (idx >= 0 && idx < 8) bitmask |= (1 << idx); });
+        cats.push([bitmask, p.attempts || 0, p.bestScore || 0]);
+      });
+    });
+    const epochDay = progress.lastVisit ? Math.floor(new Date(progress.lastVisit).getTime() / 86400000) : null;
+    return [1, progress.streak || 0, epochDay, cats];
+  }
+
+  function unpackSyncData(arr) {
+    if (!Array.isArray(arr) || arr[0] !== 1 || !Array.isArray(arr[3])) throw new Error("bad sync format");
+    const p = defaultProgress();
+    p.streak = arr[1] || 0;
+    p.lastVisit = (arr[2] != null) ? new Date(arr[2] * 86400000).toDateString() : null;
+    let i = 0;
+    SYNC_LANG_ORDER.forEach(l => {
+      CATEGORY_ORDER.forEach(c => {
+        const entry = arr[3][i++] || [0, 0, 0];
+        const [bitmask, attempts, bestScore] = entry;
+        const mastered = [];
+        for (let b = 0; b < 8; b++) { if (bitmask & (1 << b)) mastered.push(b); }
+        p.langs[l][c] = { mastered, attempts: attempts || 0, bestScore: bestScore || 0 };
+      });
+    });
+    return p;
+  }
+
   function generateSyncCode() {
-    return btoa(unescape(encodeURIComponent(JSON.stringify(progress))));
+    return btoa(JSON.stringify(packSyncData()));
   }
 
   function applySyncCode(code) {
     try {
-      const json = decodeURIComponent(escape(atob(code.trim())));
-      const parsed = JSON.parse(json);
-      mergeProgressStructure(parsed);
+      const arr = JSON.parse(atob(code.trim()));
+      progress = unpackSyncData(arr);
       saveProgress();
       return true;
     } catch (e) {
@@ -1287,16 +1389,23 @@ html, body {
       <details class="st-sync" ${state.syncPanelOpen ? "open" : ""}>
         <summary>Sync Progress Across Devices</summary>
         <div class="st-sync-body">
-          <p>No account, no server — just a code you carry between phones.</p>
-          <div class="st-sync-row">
-            <button class="st-nav-btn" data-sync-generate="1">Get My Sync Code</button>
+          <p>No account, no server — scan a QR code between your two phones, or use a text code as backup.</p>
+          <div class="st-sync-row" style="display:flex; gap:8px;">
+            <button class="st-nav-btn" data-sync-qr="1" style="flex:1;">Show My QR Code</button>
+            <button class="st-nav-btn" data-sync-scan="1" style="flex:1;">Scan a Code</button>
           </div>
-          <textarea id="stSyncOut" class="st-sync-textarea" rows="3" readonly placeholder="Tap 'Get My Sync Code' above…">${state.syncOutCode ? esc(state.syncOutCode) : ""}</textarea>
-          <button class="st-nav-btn" data-sync-copy="1" style="margin-top:6px;">Copy Code</button>
+          ${state.syncShowQr ? `<div id="stQrOut" class="st-qr-wrap"></div>` : ""}
 
-          <div class="st-sync-divider">On your other device, paste the code here:</div>
-          <textarea id="stSyncIn" class="st-sync-textarea" rows="3" placeholder="Paste sync code…"></textarea>
-          <button class="st-nav-btn" data-sync-apply="1" style="margin-top:6px;">Apply Code</button>
+          <details class="st-sync-fallback">
+            <summary>Or use a text code instead</summary>
+            <div style="margin-top:10px;">
+              <textarea id="stSyncOut" class="st-sync-textarea" rows="3" readonly placeholder="Tap 'Show My QR Code' above, or generate one here…">${state.syncOutCode ? esc(state.syncOutCode) : ""}</textarea>
+              <button class="st-nav-btn" data-sync-copy="1" style="margin-top:6px;">Copy Code</button>
+              <div class="st-sync-divider">Paste a code from another device:</div>
+              <textarea id="stSyncIn" class="st-sync-textarea" rows="3" placeholder="Paste sync code…"></textarea>
+              <button class="st-nav-btn" data-sync-apply="1" style="margin-top:6px;">Apply Code</button>
+            </div>
+          </details>
           <div id="stSyncMsg" class="st-sync-msg ${state.syncMsg ? (state.syncMsg.ok ? 'ok' : 'err') : ''}">${state.syncMsg ? esc(state.syncMsg.text) : ""}</div>
         </div>
       </details>
@@ -1551,15 +1660,16 @@ html, body {
         render();
       };
     });
-    const homeBtn = app.querySelector('[data-home]');
-    if (homeBtn) homeBtn.onclick = () => {
-      stopActiveRecognition();
-      state.view = "home";
-      state.quiz = null;
-      state.speak = null;
-      state.listen = null;
-      render();
-    };
+    app.querySelectorAll('[data-home]').forEach(el => {
+      el.onclick = () => {
+        stopActiveRecognition();
+        state.view = "home";
+        state.quiz = null;
+        state.speak = null;
+        state.listen = null;
+        render();
+      };
+    });
     app.querySelectorAll('[data-mode]').forEach(el => {
       el.onclick = () => {
         stopActiveRecognition();
@@ -1702,13 +1812,18 @@ html, body {
     maybeAutoSpeak();
 
     // ---- Sync panel (home screen only) ----
-    const syncGenBtn = app.querySelector('[data-sync-generate]');
-    if (syncGenBtn) syncGenBtn.onclick = () => {
-      const out = app.querySelector('#stSyncOut');
+    const syncQrBtn = app.querySelector('[data-sync-qr]');
+    if (syncQrBtn) syncQrBtn.onclick = () => {
       const code = generateSyncCode();
       state.syncOutCode = code;
+      state.syncShowQr = true;
       state.syncPanelOpen = true;
-      if (out) out.value = code;
+      render();
+    };
+    const syncScanBtn = app.querySelector('[data-sync-scan]');
+    if (syncScanBtn) syncScanBtn.onclick = () => {
+      state.syncPanelOpen = true;
+      startQrScan();
     };
     const syncCopyBtn = app.querySelector('[data-sync-copy]');
     if (syncCopyBtn) syncCopyBtn.onclick = async () => {
@@ -1736,7 +1851,90 @@ html, body {
       };
       render();
     };
+
+    // Render the QR image into the panel now that its container exists in the DOM
+    if (state.syncShowQr && state.syncOutCode) {
+      const qrEl = app.querySelector('#stQrOut');
+      if (qrEl && window.QRCode) {
+        qrEl.innerHTML = "";
+        new QRCode(qrEl, {
+          text: state.syncOutCode,
+          width: 220,
+          height: 220,
+          colorDark: "#14161a",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      } else if (qrEl) {
+        qrEl.innerHTML = `<div style="color:#14161a; font-family:var(--font-mono); font-size:11px; padding:20px; text-align:center;">QR library didn't load — use the text code below instead.</div>`;
+      }
+    }
   }
+
+  // ---------------- QR camera scan ----------------
+  function startQrScan() {
+    if (!window.jsQR) {
+      state.syncMsg = { text: "QR scanning library didn't load — use the text code fallback instead.", ok: false };
+      render();
+      return;
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'st-scan-overlay';
+    overlay.innerHTML = `
+      <video class="st-scan-video" autoplay playsinline muted></video>
+      <div class="st-scan-status" id="stScanStatus">Point your camera at the other phone's QR code…</div>
+      <button class="st-scan-cancel" id="stScanCancel">Cancel</button>
+    `;
+    document.body.appendChild(overlay);
+    const video = overlay.querySelector('video');
+    const statusEl = overlay.querySelector('#stScanStatus');
+    let stream = null;
+    let stopped = false;
+
+    function cleanup() {
+      stopped = true;
+      if (stream) { stream.getTracks().forEach(t => t.stop()); }
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    }
+    overlay.querySelector('#stScanCancel').onclick = cleanup;
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+      .then(s => {
+        stream = s;
+        video.srcObject = s;
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        function tick() {
+          if (stopped) return;
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const found = jsQR(imageData.data, imageData.width, imageData.height);
+            if (found && found.data) {
+              const ok = applySyncCode(found.data);
+              statusEl.textContent = ok ? "Got it! Loading progress…" : "Scanned something, but it wasn't a valid Shift Talk code.";
+              if (ok) {
+                setTimeout(() => {
+                  cleanup();
+                  state.syncPanelOpen = true;
+                  state.syncMsg = { text: "Progress loaded from QR scan.", ok: true };
+                  render();
+                }, 500);
+                return;
+              }
+            }
+          }
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      })
+      .catch(err => {
+        statusEl.textContent = "Couldn't access the camera (" + (err && err.name ? err.name : "permission denied") + "). Cancel and use the text code fallback instead.";
+      });
+  }
+
 
   function maybeAutoSpeak() {
     if (state.view !== "lesson") return;
