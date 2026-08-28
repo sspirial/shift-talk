@@ -2,7 +2,7 @@
   "name": "Shift Talk — Factory Floor Language Trainer",
   "short_name": "Shift Talk",
   "description": "Factory-floor Mandarin, Japanese, and Korean vocabulary trainer for EPZ job seekers.",
-  "start_url": "./shift-talk.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

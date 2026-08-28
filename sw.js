@@ -1,6 +1,6 @@
 const CACHE_NAME = "shift-talk-v1";
 const APP_SHELL = [
-  "./shift-talk.html",
+  "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
