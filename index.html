@@ -263,6 +263,106 @@ html, body {
   font-size: 10px;
   color: var(--text-faint);
 }
+.st-plate-disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.st-plate-disabled:hover { transform: none; border-color: var(--line); }
+
+/* ---------- sentence builder ---------- */
+.st-sentence-prompt {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.st-sentence-en {
+  font-size: 17px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.st-sentence-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.st-build-area {
+  min-height: 64px;
+  background: var(--surface-raised);
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  margin-bottom: 14px;
+}
+.st-build-empty {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  padding: 8px;
+}
+.st-chip {
+  background: var(--yellow);
+  color: #14161a;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.3;
+}
+.st-chip-roman {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  color: #4a3a08;
+  margin-top: 1px;
+}
+.st-bank {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-height: 44px;
+}
+.st-bank .st-chip {
+  background: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+.st-bank .st-chip .st-chip-roman { color: var(--text-faint); }
+.st-sentence-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.st-sentence-actions .st-nav-btn { flex: 1; }
+.st-sentence-result {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.st-sentence-correct-line {
+  font-size: 18px;
+  margin: 6px 0 2px;
+}
+.st-sentence-correct-roman {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--yellow);
+}
 
 /* ---------- lesson screen ---------- */
 .st-lesson-top {
@@ -873,6 +973,24 @@ html, body {
           { n: "合同", r: "hétong", e: "Contract" },
           { n: "身份证", r: "shēnfènzhèng", e: "ID card" },
         ]},
+        grammar: { label: "Grammar Basics", icon: "句", words: [
+          { n: "我", r: "wǒ", e: "I / me" },
+          { n: "你", r: "nǐ", e: "You" },
+          { n: "我们", r: "wǒmen", e: "We" },
+          { n: "是", r: "shì", e: "To be (am/is/are)" },
+          { n: "有", r: "yǒu", e: "To have / there is" },
+          { n: "要", r: "yào", e: "Want / need to" },
+          { n: "可以", r: "kěyǐ", e: "Can / may" },
+          { n: "需要", r: "xūyào", e: "Need" },
+          { n: "这个", r: "zhège", e: "This" },
+          { n: "这里", r: "zhèlǐ", e: "Here" },
+          { n: "很", r: "hěn", e: "Very" },
+          { n: "什么", r: "shénme", e: "What" },
+          { n: "今天", r: "jīntiān", e: "Today" },
+          { n: "明天", r: "míngtiān", e: "Tomorrow" },
+          { n: "坏", r: "huài", e: "Broken" },
+          { n: "在", r: "zài", e: "At / -ing (in the middle of)" },
+        ]},
       }
     },
     ja: {
@@ -937,6 +1055,24 @@ html, body {
           { n: "すぐ始められます", r: "sugu hajimeraremasu", e: "I can start immediately" },
           { n: "契約", r: "keiyaku", e: "Contract" },
           { n: "身分証明書", r: "mibun shoumeisho", e: "ID card" },
+        ]},
+        grammar: { label: "Grammar Basics", icon: "句", words: [
+          { n: "私", r: "watashi", e: "I / me" },
+          { n: "あなた", r: "anata", e: "You" },
+          { n: "私たち", r: "watashitachi", e: "We" },
+          { n: "です", r: "desu", e: "To be (am/is/are)" },
+          { n: "あります", r: "arimasu", e: "To have / there is" },
+          { n: "欲しいです", r: "hoshii desu", e: "Want" },
+          { n: "できます", r: "dekimasu", e: "Can / able to" },
+          { n: "必要です", r: "hitsuyou desu", e: "Need" },
+          { n: "これ", r: "kore", e: "This" },
+          { n: "ここ", r: "koko", e: "Here" },
+          { n: "とても", r: "totemo", e: "Very" },
+          { n: "何", r: "nani", e: "What" },
+          { n: "今日", r: "kyou", e: "Today" },
+          { n: "明日", r: "ashita", e: "Tomorrow" },
+          { n: "壊れた", r: "kowareta", e: "Broken" },
+          { n: "今", r: "ima", e: "Now" },
         ]},
       }
     },
@@ -1003,11 +1139,136 @@ html, body {
           { n: "계약", r: "gyeyak", e: "Contract" },
           { n: "신분증", r: "sinbunjeung", e: "ID card" },
         ]},
+        grammar: { label: "Grammar Basics", icon: "구", words: [
+          { n: "저", r: "jeo", e: "I / me" },
+          { n: "당신", r: "dangsin", e: "You" },
+          { n: "우리", r: "uri", e: "We" },
+          { n: "이에요", r: "ieyo", e: "To be (am/is/are)" },
+          { n: "있어요", r: "isseoyo", e: "To have / there is" },
+          { n: "원해요", r: "wonhaeyo", e: "Want" },
+          { n: "할 수 있어요", r: "hal su isseoyo", e: "Can / able to" },
+          { n: "필요해요", r: "piryohaeyo", e: "Need" },
+          { n: "이것", r: "igeot", e: "This" },
+          { n: "여기", r: "yeogi", e: "Here" },
+          { n: "아주", r: "aju", e: "Very" },
+          { n: "뭐", r: "mwo", e: "What" },
+          { n: "오늘", r: "oneul", e: "Today" },
+          { n: "내일", r: "naeil", e: "Tomorrow" },
+          { n: "고장났어요", r: "gojangnasseoyo", e: "Broken" },
+          { n: "지금", r: "jigeum", e: "Now" },
+        ]},
       }
     }
   };
 
-  const CATEGORY_ORDER = ["greetings", "machines", "safety", "shifts", "team", "jobsearch"];
+  const CATEGORY_ORDER = ["greetings", "machines", "safety", "shifts", "team", "jobsearch", "grammar"];
+
+  // Max words tracked per category / sentences per language in the mastery bitmask.
+  const MASTERY_BITS = 16;
+
+  // ---------------- sentence-building practice ----------------
+  // Chinese first, as requested — other languages can follow the same shape later.
+  const SENTENCES = {
+    zh: [
+      { en: "I am looking for a job.", chunks: [
+        { c: "我", r: "wǒ" }, { c: "在", r: "zài" }, { c: "找工作", r: "zhǎo gōngzuò" },
+      ]},
+      { en: "I can start immediately.", chunks: [
+        { c: "我", r: "wǒ" }, { c: "可以", r: "kěyǐ" }, { c: "马上", r: "mǎshàng" }, { c: "开始", r: "kāishǐ" },
+      ]},
+      { en: "Please inspect this part.", chunks: [
+        { c: "请", r: "qǐng" }, { c: "检查", r: "jiǎnchá" }, { c: "这个", r: "zhège" }, { c: "零件", r: "língjiàn" },
+      ]},
+      { en: "The machine is broken.", chunks: [
+        { c: "机器", r: "jīqì" }, { c: "坏", r: "huài" }, { c: "了", r: "le" },
+      ]},
+      { en: "I need help.", chunks: [
+        { c: "我", r: "wǒ" }, { c: "需要", r: "xūyào" }, { c: "帮助", r: "bāngzhù" },
+      ]},
+      { en: "It's very dangerous here.", chunks: [
+        { c: "这里", r: "zhèlǐ" }, { c: "很", r: "hěn" }, { c: "危险", r: "wēixiǎn" },
+      ]},
+      { en: "What time do I get off work?", chunks: [
+        { c: "我", r: "wǒ" }, { c: "几点", r: "jǐ diǎn" }, { c: "下班", r: "xiàbān" },
+      ]},
+      { en: "Thank you for your help.", chunks: [
+        { c: "谢谢", r: "xièxiè" }, { c: "你的", r: "nǐ de" }, { c: "帮助", r: "bāngzhù" },
+      ]},
+      { en: "I was late today.", chunks: [
+        { c: "我", r: "wǒ" }, { c: "今天", r: "jīntiān" }, { c: "迟到", r: "chídào" }, { c: "了", r: "le" },
+      ]},
+      { en: "I understand.", chunks: [
+        { c: "我", r: "wǒ" }, { c: "明白", r: "míngbai" }, { c: "了", r: "le" },
+      ]},
+    ],
+    // Japanese and Korean are both SOV (verb last) and mark grammatical roles
+    // with particles rather than word order — chunks are grouped the way a
+    // native speaker would naturally write them (word + attached particle).
+    ja: [
+      { en: "I am looking for a job.", chunks: [
+        { c: "私は", r: "watashi wa" }, { c: "仕事を", r: "shigoto o" }, { c: "探しています", r: "sagashiteimasu" },
+      ]},
+      { en: "I can start immediately.", chunks: [
+        { c: "すぐに", r: "sugu ni" }, { c: "始められます", r: "hajimeraremasu" },
+      ]},
+      { en: "Please inspect this part.", chunks: [
+        { c: "これを", r: "kore o" }, { c: "検査してください", r: "kensa shite kudasai" },
+      ]},
+      { en: "The machine is broken.", chunks: [
+        { c: "機械が", r: "kikai ga" }, { c: "壊れました", r: "kowaremashita" },
+      ]},
+      { en: "I need help.", chunks: [
+        { c: "私は", r: "watashi wa" }, { c: "手伝いが", r: "tetsudai ga" }, { c: "必要です", r: "hitsuyou desu" },
+      ]},
+      { en: "It's very dangerous here.", chunks: [
+        { c: "ここは", r: "koko wa" }, { c: "とても", r: "totemo" }, { c: "危険です", r: "kiken desu" },
+      ]},
+      { en: "What time do I get off work?", chunks: [
+        { c: "何時に", r: "nanji ni" }, { c: "退勤しますか", r: "taikin shimasu ka" },
+      ]},
+      { en: "Thank you for your help.", chunks: [
+        { c: "手伝ってくれて", r: "tetsudatte kurete" }, { c: "ありがとうございます", r: "arigatou gozaimasu" },
+      ]},
+      { en: "I was late today.", chunks: [
+        { c: "今日", r: "kyou" }, { c: "遅刻しました", r: "chikoku shimashita" },
+      ]},
+      { en: "I understand.", chunks: [
+        { c: "わかりました", r: "wakarimashita" },
+      ]},
+    ],
+    ko: [
+      { en: "I am looking for a job.", chunks: [
+        { c: "저는", r: "jeoneun" }, { c: "일자리를", r: "iljarireul" }, { c: "찾고 있어요", r: "chatgo isseoyo" },
+      ]},
+      { en: "I can start immediately.", chunks: [
+        { c: "바로", r: "baro" }, { c: "시작할 수 있어요", r: "sijakhal su isseoyo" },
+      ]},
+      { en: "Please inspect this part.", chunks: [
+        { c: "이", r: "i" }, { c: "부품을", r: "bupumeul" }, { c: "검사해 주세요", r: "geomsahae juseyo" },
+      ]},
+      { en: "The machine is broken.", chunks: [
+        { c: "기계가", r: "gigyega" }, { c: "고장났어요", r: "gojangnasseoyo" },
+      ]},
+      { en: "I need help.", chunks: [
+        { c: "저는", r: "jeoneun" }, { c: "도움이", r: "doumi" }, { c: "필요해요", r: "piryohaeyo" },
+      ]},
+      { en: "It's very dangerous here.", chunks: [
+        { c: "여기는", r: "yeogineun" }, { c: "아주", r: "aju" }, { c: "위험해요", r: "wiheomhaeyo" },
+      ]},
+      { en: "What time do I get off work?", chunks: [
+        { c: "몇", r: "myeot" }, { c: "시에", r: "sie" }, { c: "퇴근해요", r: "toegeunhaeyo" },
+      ]},
+      { en: "Thank you for your help.", chunks: [
+        { c: "도와주셔서", r: "dowajusyeoseo" }, { c: "감사합니다", r: "gamsahamnida" },
+      ]},
+      { en: "I was late today.", chunks: [
+        { c: "오늘", r: "oneul" }, { c: "지각했어요", r: "jigakhaesseoyo" },
+      ]},
+      { en: "I understand.", chunks: [
+        { c: "알겠습니다", r: "algesseumnida" },
+      ]},
+    ],
+  };
 
   const TTS_LANG = { zh: "zh-CN", ja: "ja-JP", ko: "ko-KR" };
   const MALE_VOICE_HINTS = {
@@ -1166,6 +1427,7 @@ html, body {
     syncMsg: null,          // { text, ok }
     syncOutCode: null,
     syncShowQr: false,
+    sentence: null,        // { idx, placed: [chunkIdx...], bankOrder: [...], checked, correct }
   };
   let activeRecognition = null;
 
@@ -1180,15 +1442,20 @@ html, body {
         if (!progress.langs[l][c]) progress.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
       });
     });
+    if (!progress.sentences) progress.sentences = {};
+    Object.keys(VOCAB).forEach(l => {
+      if (!progress.sentences[l]) progress.sentences[l] = { mastered: [] };
+    });
   }
 
   function defaultProgress() {
-    const p = { streak: 0, lastVisit: null, langs: {} };
+    const p = { streak: 0, lastVisit: null, langs: {}, sentences: {} };
     Object.keys(VOCAB).forEach(l => {
       p.langs[l] = {};
       CATEGORY_ORDER.forEach(c => {
         p.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
       });
+      p.sentences[l] = { mastered: [] };
     });
     return p;
   }
@@ -1249,12 +1516,18 @@ html, body {
       CATEGORY_ORDER.forEach(c => {
         const p = progress.langs[l][c];
         let bitmask = 0;
-        (p.mastered || []).forEach(idx => { if (idx >= 0 && idx < 8) bitmask |= (1 << idx); });
+        (p.mastered || []).forEach(idx => { if (idx >= 0 && idx < MASTERY_BITS) bitmask |= (1 << idx); });
         cats.push([bitmask, p.attempts || 0, p.bestScore || 0]);
       });
     });
+    const sentMasks = SYNC_LANG_ORDER.map(l => {
+      let m = 0;
+      const mastered = (progress.sentences && progress.sentences[l] && progress.sentences[l].mastered) || [];
+      mastered.forEach(idx => { if (idx >= 0 && idx < MASTERY_BITS) m |= (1 << idx); });
+      return m;
+    });
     const epochDay = progress.lastVisit ? Math.floor(new Date(progress.lastVisit).getTime() / 86400000) : null;
-    return [1, progress.streak || 0, epochDay, cats];
+    return [1, progress.streak || 0, epochDay, cats, sentMasks];
   }
 
   function unpackSyncData(arr) {
@@ -1268,9 +1541,16 @@ html, body {
         const entry = arr[3][i++] || [0, 0, 0];
         const [bitmask, attempts, bestScore] = entry;
         const mastered = [];
-        for (let b = 0; b < 8; b++) { if (bitmask & (1 << b)) mastered.push(b); }
+        for (let b = 0; b < MASTERY_BITS; b++) { if (bitmask & (1 << b)) mastered.push(b); }
         p.langs[l][c] = { mastered, attempts: attempts || 0, bestScore: bestScore || 0 };
       });
+    });
+    const sentMasks = arr[4] || [];
+    SYNC_LANG_ORDER.forEach((l, idx) => {
+      const mask = sentMasks[idx] || 0;
+      const mastered = [];
+      for (let b = 0; b < MASTERY_BITS; b++) { if (mask & (1 << b)) mastered.push(b); }
+      p.sentences[l] = { mastered };
     });
     return p;
   }
@@ -1323,10 +1603,119 @@ html, body {
   }
 
   // ---------------- render ----------------
+  // ---------------- sentence builder view ----------------
+  function shuffleIndices(n) {
+    const idxs = Array.from({ length: n }, (_, i) => i);
+    return shuffle(idxs);
+  }
+
+  function ensureSentence() {
+    const list = SENTENCES[state.lang] || [];
+    if (!list.length) return;
+    if (!state.sentence) {
+      state.sentence = { idx: 0, placed: [], bankOrder: shuffleIndices(list[0].chunks.length), checked: false, correct: null };
+    }
+  }
+
+  function renderSentenceBuilder() {
+    const lang = VOCAB[state.lang];
+    const list = SENTENCES[state.lang] || [];
+
+    if (!list.length) {
+      app.innerHTML = `
+        <div class="st-lesson-top">
+          <div class="st-back" data-home="1">&larr; Floor</div>
+          <div class="st-lesson-title">Sentence Builder</div>
+        </div>
+        <div class="st-support-note" style="margin-top:20px;">Sentence practice for ${lang.name} isn't built yet — Chinese is live now, others are coming.</div>
+      `;
+      return;
+    }
+
+    ensureSentence();
+    const s = state.sentence;
+    const sent = list[s.idx];
+    const bankIdxs = s.bankOrder.filter(i => !s.placed.includes(i));
+
+    const placedHtml = s.placed.length
+      ? s.placed.map((chunkIdx, pos) => {
+          const ch = sent.chunks[chunkIdx];
+          return `<button class="st-chip" data-placed-idx="${pos}">${esc(ch.c)}<span class="st-chip-roman">${esc(ch.r)}</span></button>`;
+        }).join("")
+      : `<div class="st-build-empty">Tap words below to build the sentence…</div>`;
+
+    const bankHtml = bankIdxs.map(chunkIdx => {
+      const ch = sent.chunks[chunkIdx];
+      return `<button class="st-chip" data-bank-idx="${chunkIdx}">${esc(ch.c)}<span class="st-chip-roman">${esc(ch.r)}</span></button>`;
+    }).join("");
+
+    let resultHtml = "";
+    if (s.checked) {
+      const fullSentence = sent.chunks.map(c => c.c).join("") + "。";
+      const fullRoman = sent.chunks.map(c => c.r).join(" ");
+      resultHtml = `
+        <div class="st-sentence-result">
+          <div class="st-feedback ${s.correct ? 'correct' : 'incorrect'}" style="margin:0;">
+            <strong>${s.correct ? "Correct!" : "Not quite"}</strong>
+          </div>
+          <div class="st-sentence-correct-line">${esc(fullSentence)}</div>
+          <div class="st-sentence-correct-roman">${esc(fullRoman)}</div>
+        </div>
+      `;
+    }
+
+    const dots = list.map((_, i) => `<div class="st-dot ${i === s.idx ? 'on' : ''}"></div>`).join("");
+
+    app.innerHTML = `
+      <div class="st-lesson-top">
+        <div class="st-back" data-home="1">&larr; Floor</div>
+        <div class="st-lesson-title">Sentence Builder</div>
+      </div>
+      <div class="st-sentence-prompt">
+        <div class="st-sentence-label">Sentence ${s.idx + 1} of ${list.length} &middot; Build this in ${lang.name}</div>
+        <div class="st-sentence-en">${esc(sent.en)}</div>
+      </div>
+      <div class="st-build-area">${placedHtml}</div>
+      <div class="st-bank">${bankHtml}</div>
+      <div class="st-sentence-actions">
+        <button class="st-nav-btn" data-sentence-clear="1">Clear</button>
+        <button class="st-nav-btn" data-sentence-check="1" ${s.placed.length !== sent.chunks.length ? "disabled" : ""}>Check</button>
+      </div>
+      ${resultHtml}
+      <div class="st-card-nav">
+        <button class="st-nav-btn" data-sentence-prev="1" ${s.idx === 0 ? "disabled" : ""}>&larr; Prev</button>
+        <div class="st-dots">${dots}</div>
+        <button class="st-nav-btn" data-sentence-next="1" ${s.idx === list.length - 1 ? "disabled" : ""}>Next &rarr;</button>
+      </div>
+    `;
+  }
+
   function render() {
     if (state.view === "home") renderHome();
+    else if (state.view === "sentences") renderSentenceBuilder();
     else renderLesson();
     attachHandlers();
+  }
+
+  function renderSentencePlate(lang) {
+    const sentences = SENTENCES[state.lang] || [];
+    const sentProg = (progress.sentences && progress.sentences[state.lang]) || { mastered: [] };
+    if (!sentences.length) {
+      return `
+        <div class="st-plate st-plate-disabled">
+          <div class="st-plate-icon">句</div>
+          <div class="st-plate-title">Build ${lang.name} Sentences</div>
+          <div class="st-plate-meta">Coming soon for ${lang.name} — Chinese sentence practice is live now</div>
+        </div>`;
+    }
+    const pct = Math.round((sentProg.mastered.length / sentences.length) * 100);
+    return `
+      <div class="st-plate" data-sentences="1" style="--plate-color:${lang.color}">
+        <div class="st-plate-icon">句</div>
+        <div class="st-plate-title">Build ${lang.name} Sentences</div>
+        <div class="st-plate-bar-track"><div class="st-plate-bar-fill" style="width:${pct}%"></div></div>
+        <div class="st-plate-meta">${sentProg.mastered.length}/${sentences.length} SENTENCES BUILT &middot; USES YOUR VOCAB ABOVE</div>
+      </div>`;
   }
 
   function renderHome() {
@@ -1385,6 +1774,9 @@ html, body {
 
       <div class="st-section-label">${lang.name} &mdash; Lesson Plates</div>
       <div class="st-plates">${platesHtml}</div>
+
+      <div class="st-section-label">Sentence Practice</div>
+      ${renderSentencePlate(lang)}
 
       <details class="st-sync" ${state.syncPanelOpen ? "open" : ""}>
         <summary>Sync Progress Across Devices</summary>
@@ -1660,6 +2052,13 @@ html, body {
         render();
       };
     });
+    const sentencesPlate = app.querySelector('[data-sentences]');
+    if (sentencesPlate) sentencesPlate.onclick = () => {
+      stopActiveRecognition();
+      state.view = "sentences";
+      state.sentence = null;
+      render();
+    };
     app.querySelectorAll('[data-home]').forEach(el => {
       el.onclick = () => {
         stopActiveRecognition();
@@ -1667,6 +2066,7 @@ html, body {
         state.quiz = null;
         state.speak = null;
         state.listen = null;
+        state.sentence = null;
         render();
       };
     });
@@ -1807,6 +2207,60 @@ html, body {
       stopActiveRecognition();
       const cat = VOCAB[state.lang].categories[state.category];
       if (state.listen.idx < cat.words.length - 1) { state.listen.idx++; state.listen.phase = "ready"; state.listen.result = null; state.lastSpokenKey = null; render(); }
+    };
+
+    // ---- Sentence builder ----
+    function goToSentence(newIdx) {
+      const list = SENTENCES[state.lang] || [];
+      const sent = list[newIdx];
+      state.sentence = { idx: newIdx, placed: [], bankOrder: shuffleIndices(sent.chunks.length), checked: false, correct: null };
+      render();
+    }
+    app.querySelectorAll('[data-bank-idx]').forEach(el => {
+      el.onclick = () => {
+        if (state.sentence.checked) return;
+        state.sentence.placed.push(parseInt(el.dataset.bankIdx, 10));
+        render();
+      };
+    });
+    app.querySelectorAll('[data-placed-idx]').forEach(el => {
+      el.onclick = () => {
+        if (state.sentence.checked) return;
+        const pos = parseInt(el.dataset.placedIdx, 10);
+        state.sentence.placed.splice(pos, 1);
+        render();
+      };
+    });
+    const sentClear = app.querySelector('[data-sentence-clear]');
+    if (sentClear) sentClear.onclick = () => {
+      state.sentence.placed = [];
+      state.sentence.checked = false;
+      state.sentence.correct = null;
+      render();
+    };
+    const sentCheck = app.querySelector('[data-sentence-check]');
+    if (sentCheck) sentCheck.onclick = () => {
+      const list = SENTENCES[state.lang] || [];
+      const sent = list[state.sentence.idx];
+      const correct = state.sentence.placed.length === sent.chunks.length &&
+        state.sentence.placed.every((v, i) => v === i);
+      state.sentence.checked = true;
+      state.sentence.correct = correct;
+      if (correct) {
+        const sp = progress.sentences[state.lang];
+        if (!sp.mastered.includes(state.sentence.idx)) sp.mastered.push(state.sentence.idx);
+        saveProgress();
+      }
+      render();
+      const fullSentence = sent.chunks.map(c => c.c).join("");
+      speak(fullSentence, state.lang, null);
+    };
+    const sentPrev = app.querySelector('[data-sentence-prev]');
+    if (sentPrev) sentPrev.onclick = () => { if (state.sentence.idx > 0) goToSentence(state.sentence.idx - 1); };
+    const sentNext = app.querySelector('[data-sentence-next]');
+    if (sentNext) sentNext.onclick = () => {
+      const list = SENTENCES[state.lang] || [];
+      if (state.sentence.idx < list.length - 1) goToSentence(state.sentence.idx + 1);
     };
 
     maybeAutoSpeak();

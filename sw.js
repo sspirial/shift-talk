@@ -1,4 +1,4 @@
-const CACHE_NAME = "shift-talk-v3";
+const CACHE_NAME = "shift-talk-v5";
 const APP_SHELL = [
   "./index.html",
   "./manifest.json",
