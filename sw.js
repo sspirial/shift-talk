@@ -1,9 +1,22 @@
-const CACHE_NAME = "shift-talk-v5";
+const VERSION = "v6";
+const CACHE_NAME = `shift-talk-${VERSION}`;
 const APP_SHELL = [
   "./index.html",
   "./manifest.json",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./js/store.js",
+  "./js/migrate.js",
+  "./js/validate.js",
+  "./js/schedule.js",
+  "./js/generate.js",
+  "./js/firebase.js",
+  "./js/firebase-config.js",
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js",
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js",
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js",
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-ai.js",
+  "https://www.gstatic.com/firebasejs/12.1.0/firebase-remote-config.js"
 ];
 
 self.addEventListener("install", (event) => {
@@ -22,21 +35,16 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Cache-first for the app shell, network-first fallback for everything else
-// (e.g. font requests), so the trainer still opens with no signal.
+// App modules use stale-while-revalidate so updates arrive on a later visit.
 self.addEventListener("fetch", (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          if (response && response.status === 200 && event.request.method === "GET") {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-    })
-  );
+  if (event.request.method !== "GET") return;
+  event.respondWith(caches.match(event.request).then(cached => {
+    const update = fetch(event.request).then(response => {
+      if (response && response.status === 200) {
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, response.clone()));
+      }
+      return response;
+    }).catch(() => cached);
+    return cached || update;
+  }));
 });

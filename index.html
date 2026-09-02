@@ -903,13 +903,22 @@ html, body {
   <div class="st-hazard"></div>
 </div>
 
-<script>
+<script type="module">
+import {
+  buildDeck, cardId, loadEvents, recordEvent, foldMastery, isMastered,
+  loadGeneratedCards, loadMeta, saveMeta, mergeEvents,
+} from "./js/store.js";
+import { runMigration, sentenceId } from "./js/migrate.js";
+import { syncWithFirebase } from "./js/firebase.js";
+
 (function () {
   const root = document.getElementById('stRoot');
   const app = document.getElementById('stApp');
 
   // ---------------- vocab data ----------------
-  const VOCAB = {
+  // The seed deck. buildDeck() below re-exports it as VOCAB with a stable `id`
+  // on every word, so nothing downstream has to change.
+  const SEED_VOCAB = {
     zh: {
       name: "Mandarin", native: "中文", color: "#D6564F", code: "ZH",
       categories: {
@@ -1163,8 +1172,13 @@ html, body {
 
   const CATEGORY_ORDER = ["greetings", "machines", "safety", "shifts", "team", "jobsearch", "grammar"];
 
-  // Max words tracked per category / sentences per language in the mastery bitmask.
-  const MASTERY_BITS = 16;
+  // Every word gains a stable, content-derived `id`. Card identity no longer
+  // depends on array position, so the deck can grow without corrupting progress.
+  const VOCAB = buildDeck(SEED_VOCAB, loadGeneratedCards());
+
+  // Legacy: still used by the QR sync path, which stays as an offline fallback.
+  // Not a limit on the deck any more — mastery is keyed by id, not by bit index.
+  const SYNC_EVENT_LIMIT = 250;
 
   // ---------------- sentence-building practice ----------------
   // Chinese first, as requested — other languages can follow the same shape later.
@@ -1431,78 +1445,75 @@ html, body {
   };
   let activeRecognition = null;
 
-  let progress = null; // loaded from storage
-  const LS_KEY = "shifttalk_progress";
+  let progress = null; // derived view, rebuilt from the event log
 
-  function mergeProgressStructure(parsed) {
-    progress = Object.assign(defaultProgress(), parsed);
-    Object.keys(VOCAB).forEach(l => {
-      if (!progress.langs[l]) progress.langs[l] = {};
-      CATEGORY_ORDER.forEach(c => {
-        if (!progress.langs[l][c]) progress.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
-      });
+  // ---------------- derived progress ----------------
+  // `progress` is no longer stored — it is a VIEW recomputed by folding the
+  // append-only event log. Every render site still reads .mastered.length and
+  // .bestScore exactly as before, so the UI code is untouched.
+  let events = [];
+  let meta = loadMeta();
+  let mastery = new Map();
+
+  function sentenceIdsFor(lang) {
+    return (SENTENCES[lang] || []).map(s => sentenceId(lang, s));
+  }
+
+  function rebuildProgress() {
+    mastery = foldMastery(events);
+    const attempts = {};
+    events.forEach(e => {
+      if (e.mode === "flag") return;
+      const k = `${e.lang}.${e.category}`;
+      attempts[k] = (attempts[k] || 0) + 1;
     });
-    if (!progress.sentences) progress.sentences = {};
+    progress = { streak: meta.streak, lastVisit: meta.lastVisit, langs: {}, sentences: {} };
     Object.keys(VOCAB).forEach(l => {
-      if (!progress.sentences[l]) progress.sentences[l] = { mastered: [] };
+      progress.langs[l] = {};
+      CATEGORY_ORDER.forEach(c => {
+        progress.langs[l][c] = {
+          mastered: VOCAB[l].categories[c].words.filter(w => isMastered(mastery, w.id)).map(w => w.id),
+          attempts: attempts[`${l}.${c}`] || 0,
+          bestScore: meta.best[`${l}.${c}`] || 0,
+        };
+      });
+      progress.sentences[l] = { mastered: sentenceIdsFor(l).filter(id => isMastered(mastery, id)) };
     });
   }
 
-  function defaultProgress() {
-    const p = { streak: 0, lastVisit: null, langs: {}, sentences: {} };
-    Object.keys(VOCAB).forEach(l => {
-      p.langs[l] = {};
-      CATEGORY_ORDER.forEach(c => {
-        p.langs[l][c] = { mastered: [], attempts: 0, bestScore: 0 };
-      });
-      p.sentences[l] = { mastered: [] };
+  // Appends one immutable event, then recomputes the view. This replaces every
+  // `cat.words.indexOf(w)` write site — card identity is now the stable id.
+  function logEvent(id, mode, grade, category) {
+    recordEvent(events, {
+      cardId: id, lang: state.lang, category: category || state.category, mode, grade,
     });
-    return p;
+    rebuildProgress();
   }
 
   async function loadProgress() {
-    let raw = null;
-    // Prefer the Claude artifact storage API when previewed inside claude.ai;
-    // fall back to plain localStorage for a standalone hosted deployment.
-    try {
-      if (window.storage && typeof window.storage.get === "function") {
-        const res = await window.storage.get('progress', false);
-        raw = res ? res.value : null;
-      } else {
-        raw = localStorage.getItem(LS_KEY);
-      }
-    } catch (e) {
-      try { raw = localStorage.getItem(LS_KEY); } catch (e2) { raw = null; }
+    events = loadEvents();
+    // One-shot: resolves old positional indices against the still-bundled seed
+    // deck, so every index maps to exactly the card it originally meant.
+    const report = runMigration(SEED_VOCAB, SENTENCES, CATEGORY_ORDER, events);
+    if (report.ran) {
+      if (report.meta) { meta = { ...meta, ...report.meta }; saveMeta(meta); }
+      console.info(`[shift-talk] migrated ${report.words} words, ${report.sentences} sentences`,
+        report.unresolved.length ? { unresolved: report.unresolved } : "");
     }
-    if (raw) {
-      try { mergeProgressStructure(JSON.parse(raw)); }
-      catch (e) { progress = defaultProgress(); }
-    } else {
-      progress = defaultProgress();
-    }
+    rebuildProgress();
     bumpStreak();
     render();
   }
 
   function bumpStreak() {
     const today = new Date().toDateString();
-    if (progress.lastVisit !== today) {
+    if (meta.lastVisit !== today) {
       const yesterday = new Date(Date.now() - 86400000).toDateString();
-      progress.streak = (progress.lastVisit === yesterday) ? progress.streak + 1 : 1;
-      progress.lastVisit = today;
-      saveProgress();
+      meta.streak = (meta.lastVisit === yesterday) ? meta.streak + 1 : 1;
+      meta.lastVisit = today;
+      saveMeta(meta);
+      rebuildProgress();
     }
-  }
-
-  async function saveProgress() {
-    const json = JSON.stringify(progress);
-    try {
-      if (window.storage && typeof window.storage.set === "function") {
-        await window.storage.set('progress', json, false);
-        return;
-      }
-    } catch (e) { /* fall through to localStorage */ }
-    try { localStorage.setItem(LS_KEY, json); } catch (e) { /* best effort */ }
   }
 
   // ---------------- cross-device sync code (no backend required) ----------------
@@ -1511,59 +1522,62 @@ html, body {
   const SYNC_LANG_ORDER = ["zh", "ja", "ko"];
 
   function packSyncData() {
-    const cats = [];
-    SYNC_LANG_ORDER.forEach(l => {
-      CATEGORY_ORDER.forEach(c => {
-        const p = progress.langs[l][c];
-        let bitmask = 0;
-        (p.mastered || []).forEach(idx => { if (idx >= 0 && idx < MASTERY_BITS) bitmask |= (1 << idx); });
-        cats.push([bitmask, p.attempts || 0, p.bestScore || 0]);
-      });
-    });
-    const sentMasks = SYNC_LANG_ORDER.map(l => {
-      let m = 0;
-      const mastered = (progress.sentences && progress.sentences[l] && progress.sentences[l].mastered) || [];
-      mastered.forEach(idx => { if (idx >= 0 && idx < MASTERY_BITS) m |= (1 << idx); });
-      return m;
-    });
-    const epochDay = progress.lastVisit ? Math.floor(new Date(progress.lastVisit).getTime() / 86400000) : null;
-    return [1, progress.streak || 0, epochDay, cats, sentMasks];
-  }
-
-  function unpackSyncData(arr) {
-    if (!Array.isArray(arr) || arr[0] !== 1 || !Array.isArray(arr[3])) throw new Error("bad sync format");
-    const p = defaultProgress();
-    p.streak = arr[1] || 0;
-    p.lastVisit = (arr[2] != null) ? new Date(arr[2] * 86400000).toDateString() : null;
-    let i = 0;
-    SYNC_LANG_ORDER.forEach(l => {
-      CATEGORY_ORDER.forEach(c => {
-        const entry = arr[3][i++] || [0, 0, 0];
-        const [bitmask, attempts, bestScore] = entry;
-        const mastered = [];
-        for (let b = 0; b < MASTERY_BITS; b++) { if (bitmask & (1 << b)) mastered.push(b); }
-        p.langs[l][c] = { mastered, attempts: attempts || 0, bestScore: bestScore || 0 };
-      });
-    });
-    const sentMasks = arr[4] || [];
-    SYNC_LANG_ORDER.forEach((l, idx) => {
-      const mask = sentMasks[idx] || 0;
-      const mastered = [];
-      for (let b = 0; b < MASTERY_BITS; b++) { if (mask & (1 << b)) mastered.push(b); }
-      p.sentences[l] = { mastered };
-    });
-    return p;
+    const epochDay = meta.lastVisit ? Math.floor(new Date(meta.lastVisit).getTime() / 86400000) : null;
+    return { version: 2, streak: meta.streak || 0, epochDay, events: events.slice(-SYNC_EVENT_LIMIT) };
   }
 
   function generateSyncCode() {
     return btoa(JSON.stringify(packSyncData()));
   }
 
+  // Now ADDITIVE. The old version replaced the whole progress object, so
+  // scanning an older device's code destroyed newer progress. Incoming mastery
+  // becomes events instead, and the merge is a set union — importing the same
+  // code twice is a no-op, and neither device can lose work.
   function applySyncCode(code) {
     try {
-      const arr = JSON.parse(atob(code.trim()));
-      progress = unpackSyncData(arr);
-      saveProgress();
+      const payload = JSON.parse(atob(code.trim()));
+      if (payload && payload.version === 2 && Array.isArray(payload.events)) {
+        events = mergeEvents(events, payload.events);
+        meta.streak = Math.max(meta.streak || 0, payload.streak || 0);
+        saveMeta(meta);
+        localStorage.setItem("shifttalk_events", JSON.stringify(events));
+        rebuildProgress();
+        return true;
+      }
+      const arr = payload;
+      if (!Array.isArray(arr) || arr[0] !== 1 || !Array.isArray(arr[3])) throw new Error("bad sync format");
+      const ts = (arr[2] != null) ? arr[2] * 86400000 : Date.now();
+      let i = 0;
+      SYNC_LANG_ORDER.forEach(l => {
+        CATEGORY_ORDER.forEach(c => {
+          const [bitmask, , bestScore] = arr[3][i++] || [0, 0, 0];
+          const words = SEED_VOCAB[l].categories[c].words;
+          for (let b = 0; b < 16; b++) {
+            if (!(bitmask & (1 << b)) || !words[b]) continue;
+            recordEvent(events, {
+              cardId: cardId(l, words[b].n), lang: l, category: c,
+              mode: "sync", grade: "correct", ts, source: "sync",
+            });
+          }
+          const key = `${l}.${c}`;
+          if ((bestScore || 0) > (meta.best[key] || 0)) meta.best[key] = bestScore;
+        });
+      });
+      (arr[4] || []).forEach((mask, li) => {
+        const l = SYNC_LANG_ORDER[li];
+        const ids = sentenceIdsFor(l);
+        for (let b = 0; b < 16; b++) {
+          if (!(mask & (1 << b)) || !ids[b]) continue;
+          recordEvent(events, {
+            cardId: ids[b], lang: l, category: "__sentence",
+            mode: "sync", grade: "correct", ts, source: "sync",
+          });
+        }
+      });
+      meta.streak = Math.max(meta.streak || 0, arr[1] || 0);
+      saveMeta(meta);
+      rebuildProgress();
       return true;
     } catch (e) {
       return false;
@@ -2122,13 +2136,9 @@ html, body {
           const graded = gradeNativeAttempt(w.n, text);
           state.speak.phase = "ready";
           state.speak.result = graded;
-          if (graded.grade !== "incorrect") {
-            const catProg = progress.langs[state.lang][state.category];
-            catProg.attempts++;
-            const wordIdx = cat.words.indexOf(w);
-            if (!catProg.mastered.includes(wordIdx)) catProg.mastered.push(wordIdx);
-            saveProgress();
-          }
+          // Every grade is logged, including incorrect — lapses drive the
+          // scheduler and tell the generator what to reinforce.
+          logEvent(w.id, "speak", graded.grade);
           render();
         },
         (err) => {
@@ -2160,13 +2170,7 @@ html, body {
       const graded = gradeEnglishAttempt(w.e, userText);
       state.listen.result = { grade: graded.grade, userText };
       state.listen.phase = graded.grade === "correct" ? "revealed" : "ready";
-      if (graded.grade !== "incorrect") {
-        const catProg = progress.langs[state.lang][state.category];
-        catProg.attempts++;
-        const wordIdx = cat.words.indexOf(w);
-        if (!catProg.mastered.includes(wordIdx)) catProg.mastered.push(wordIdx);
-        saveProgress();
-      }
+      logEvent(w.id, "listen", graded.grade);
       render();
     }
     const listenMic = app.querySelector('[data-listen-mic]');
@@ -2246,11 +2250,7 @@ html, body {
         state.sentence.placed.every((v, i) => v === i);
       state.sentence.checked = true;
       state.sentence.correct = correct;
-      if (correct) {
-        const sp = progress.sentences[state.lang];
-        if (!sp.mastered.includes(state.sentence.idx)) sp.mastered.push(state.sentence.idx);
-        saveProgress();
-      }
+      logEvent(sentenceId(state.lang, sent), "sentence", correct ? "correct" : "incorrect", "__sentence");
       render();
       const fullSentence = sent.chunks.map(c => c.c).join("");
       speak(fullSentence, state.lang, null);
@@ -2424,12 +2424,7 @@ html, body {
     const correct = picked === current.word.e;
     if (correct) q.score++;
 
-    const catProg = progress.langs[state.lang][state.category];
-    catProg.attempts++;
-    if (correct) {
-      const wordIdx = VOCAB[state.lang].categories[state.category].words.indexOf(current.word);
-      if (!catProg.mastered.includes(wordIdx)) catProg.mastered.push(wordIdx);
-    }
+    logEvent(current.word.id, "quiz", correct ? "correct" : "incorrect");
 
     render();
 
@@ -2438,14 +2433,31 @@ html, body {
         q.qIndex++;
       } else {
         q.done = true;
-        if (q.score > catProg.bestScore) catProg.bestScore = q.score;
-        saveProgress();
+        // Best score is per-category display state, not a per-card fact, so it
+        // can't be folded out of the log — it lives in the meta blob.
+        const key = `${state.lang}.${state.category}`;
+        if (q.score > (meta.best[key] || 0)) {
+          meta.best[key] = q.score;
+          saveMeta(meta);
+          rebuildProgress();
+        }
       }
       render();
     }, 850);
   }
 
   loadProgress();
+
+  // Firebase is additive. A missing config, offline network, or failed sync
+  // never delays the local render or prevents practice.
+  syncWithFirebase(events).then(result => {
+    if (result.events.length !== events.length) {
+      events = mergeEvents(events, result.events);
+      localStorage.setItem("shifttalk_events", JSON.stringify(events));
+      rebuildProgress();
+      render();
+    }
+  }).catch(() => {});
 
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {

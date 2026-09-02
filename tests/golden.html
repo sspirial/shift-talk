@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shift Talk — Validator Golden Set</title>
+<style>
+  body { font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background:#14161a; color:#dfe3e8; margin:0; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  .sub { color:#8b939c; margin-bottom:20px; }
+  .summary { padding:14px 16px; border-radius:6px; margin-bottom:20px; font-weight:bold; }
+  .summary.pass { background:#12331f; color:#6ee7a0; border:1px solid #1f6b3d; }
+  .summary.fail { background:#3a1518; color:#ff9c9c; border:1px solid #7a2530; }
+  table { border-collapse:collapse; width:100%; }
+  th, td { text-align:left; padding:6px 10px; border-bottom:1px solid #262a30; vertical-align:top; }
+  th { color:#8b939c; font-weight:normal; text-transform:uppercase; font-size:11px; letter-spacing:.06em; }
+  .ok { color:#6ee7a0; } .bad { color:#ff7b7b; }
+  .native { font-size:16px; }
+  .detail { color:#8b939c; font-size:12px; }
+  .group { color:#e8b84b; padding-top:18px; font-size:12px; letter-spacing:.06em; }
+</style>
+</head>
+<body>
+<h1>Validator Golden Set</h1>
+<div class="sub">Regression guard for <code>js/validate.js</code> — no network, no API cost.<br>
+Must be served over http (ES modules are blocked on <code>file://</code>).</div>
+<div id="summary" class="summary">Running…</div>
+<table><thead><tr><th>#</th><th>Case</th><th>Card</th><th>Expected</th><th>Actual</th></tr></thead>
+<tbody id="rows"></tbody></table>
+
+<script type="module">
+import { validateCard, countPinyinSyllables } from "../js/validate.js";
+
+// Known-good fixtures are taken verbatim from the shipped seed deck in
+// index.html, so a tightened gate that starts rejecting real vocabulary fails
+// loudly here instead of silently shrinking the deck.
+const GOOD = [
+  ["zh greetings", { lang:"zh", category:"greetings", n:"你好", r:"nǐ hǎo", e:"Hello" }],
+  ["zh reduplicated", { lang:"zh", category:"greetings", n:"谢谢", r:"xièxiè", e:"Thank you" }],
+  ["zh 3-syllable compound", { lang:"zh", category:"machines", n:"生产线", r:"shēngchǎnxiàn", e:"Production line" }],
+  ["zh 7-syllable phrase", { lang:"zh", category:"jobsearch", n:"我可以马上开始", r:"wǒ kěyǐ mǎshàng kāishǐ", e:"I can start immediately" }],
+  ["zh diphthong nucleus", { lang:"zh", category:"safety", n:"危险", r:"wēixiǎn", e:"Danger" }],
+  ["zh 3-char ID noun", { lang:"zh", category:"jobsearch", n:"身份证", r:"shēnfènzhèng", e:"ID card" }],
+  ["zh single syllable", { lang:"zh", category:"grammar", n:"坏", r:"huài", e:"Broken" }],
+  ["zh toneless neutral", { lang:"zh", category:"grammar", n:"什么", r:"shénme", e:"What" }],
+  ["zh space-separated", { lang:"zh", category:"jobsearch", n:"找工作", r:"zhǎo gōngzuò", e:"Look for a job" }],
+  ["zh ü vowel", { lang:"zh", category:"team", n:"团队", r:"tuánduì", e:"Team" }],
+  ["zh parenthetical gloss", { lang:"zh", category:"greetings", n:"师傅", r:"shīfu", e:"Skilled worker (respectful term)" }],
+  ["ja hiragana", { lang:"ja", category:"greetings", n:"こんにちは", r:"konnichiwa", e:"Hello" }],
+  ["ja long polite form", { lang:"ja", category:"greetings", n:"ありがとうございます", r:"arigatou gozaimasu", e:"Thank you" }],
+  ["ja kanji+kana mix", { lang:"ja", category:"greetings", n:"お願いします", r:"onegaishimasu", e:"Please" }],
+  ["ja macron romaji", { lang:"ja", category:"machines", n:"機械", r:"kikāi", e:"Machine" }],
+  ["ja katakana loanword", { lang:"ja", category:"machines", n:"ライン", r:"rain", e:"Line" }],
+  ["ko hangul greeting", { lang:"ko", category:"greetings", n:"안녕하세요", r:"annyeonghaseyo", e:"Hello" }],
+  ["ko formal thanks", { lang:"ko", category:"greetings", n:"감사합니다", r:"gamsahamnida", e:"Thank you" }],
+  ["ko safety term", { lang:"ko", category:"safety", n:"위험", r:"wiheom", e:"Danger" }],
+  ["ko hyphenated roman", { lang:"ko", category:"shifts", n:"교대", r:"gyo-dae", e:"Shift" }],
+];
+
+const BAD = [
+  ["Hangul submitted as zh", { lang:"zh", category:"greetings", n:"안녕", r:"annyeong", e:"Hello" }, "script"],
+  ["kana submitted as zh", { lang:"zh", category:"greetings", n:"こんにちは", r:"konnichiwa", e:"Hello" }, "script"],
+  ["Latin submitted as zh", { lang:"zh", category:"machines", n:"machine", r:"jīqì", e:"Machine" }, "script"],
+  ["Han submitted as ko", { lang:"ko", category:"machines", n:"機械", r:"gigye", e:"Machine" }, "script"],
+  ["Hangul inside ja", { lang:"ja", category:"greetings", n:"안녕하세요", r:"konnichiwa", e:"Hello" }, "script"],
+  ["empty native", { lang:"zh", category:"machines", n:"", r:"jīqì", e:"Machine" }, "script"],
+  ["pinyin too short for chars", { lang:"zh", category:"machines", n:"生产线", r:"shēngchǎn", e:"Production line" }, "romanization"],
+  ["pinyin truncated on phrase", { lang:"zh", category:"jobsearch", n:"我可以马上开始", r:"wǒ kěyǐ", e:"I can start immediately" }, "romanization"],
+  ["pinyin too long for chars", { lang:"zh", category:"safety", n:"停", r:"tíng zhǐ", e:"Stop" }, "romanization"],
+  ["empty romanization", { lang:"zh", category:"machines", n:"机器", r:"", e:"Machine" }, "romanization"],
+  ["Hangul in pinyin field", { lang:"zh", category:"machines", n:"机器", r:"기계", e:"Machine" }, "romanization"],
+  ["gloss identical to native", { lang:"ko", category:"greetings", n:"안녕하세요", r:"annyeonghaseyo", e:"안녕하세요" }, "gloss"],
+  ["gloss over 60 chars", { lang:"zh", category:"grammar", n:"很", r:"hěn", e:"Very, extremely, quite, rather, awfully, and also somewhat depending on context" }, "gloss"],
+  ["non-ASCII gloss", { lang:"zh", category:"safety", n:"安全", r:"ānquán", e:"Sécurité" }, "gloss"],
+  ["empty gloss", { lang:"zh", category:"safety", n:"安全", r:"ānquán", e:"" }, "gloss"],
+  ["tourist term in safety", { lang:"zh", category:"safety", n:"出口", r:"chūkǒu", e:"Exit to the hotel" }, "register"],
+  ["tourist term in machines", { lang:"zh", category:"machines", n:"工具", r:"gōngjù", e:"Souvenir tool" }, "register"],
+  ["unknown language", { lang:"de", category:"greetings", n:"Hallo", r:"hallo", e:"Hello" }, "script"],
+];
+
+// Duplicate gates need deck context, so they are asserted separately.
+const EXISTING = [{ n:"机器", r:"jīqì", e:"Machine" }, { n:"人", r:"rén", e:"Person" }];
+const DUP = [
+  ["exact duplicate rejected", { lang:"zh", category:"machines", n:"机器", r:"jīqì", e:"Equipment" }, false, "duplicate"],
+  ["punctuation-variant duplicate", { lang:"zh", category:"machines", n:"机器。", r:"jīqì", e:"Equipment" }, false, "duplicate"],
+  ["near-duplicate flags but passes", { lang:"zh", category:"grammar", n:"入", r:"rù", e:"To enter" }, true, "duplicate"],
+];
+
+const rows = document.getElementById("rows");
+let pass = 0, fail = 0;
+
+function row(n, name, card, expected, actualOk, failures, good) {
+  if (good) pass++; else fail++;
+  const gates = failures.map(f => `${f.gate}:${f.severity}`).join(", ") || "none";
+  rows.insertAdjacentHTML("beforeend", `<tr>
+    <td>${n}</td>
+    <td>${name}</td>
+    <td><span class="native">${card.n || "∅"}</span> <span class="detail">${card.r || "∅"}</span></td>
+    <td class="detail">${expected}</td>
+    <td class="${good ? "ok" : "bad"}">${good ? "PASS" : "FAIL"} <span class="detail">ok=${actualOk} · ${gates}</span></td>
+  </tr>`);
+}
+
+function group(label) {
+  rows.insertAdjacentHTML("beforeend", `<tr><td colspan="5" class="group">${label}</td></tr>`);
+}
+
+let i = 0;
+group("MUST PASS — real vocabulary from the shipped deck");
+GOOD.forEach(([name, card]) => {
+  const r = validateCard(card, []);
+  row(++i, name, card, "accepted", r.ok, r.failures, r.ok && r.failures.length === 0);
+});
+
+group("MUST BE REJECTED");
+BAD.forEach(([name, card, gate]) => {
+  const r = validateCard(card, []);
+  const hit = r.failures.some(f => f.gate === gate && f.severity === "reject");
+  row(++i, name, card, `reject via ${gate}`, r.ok, r.failures, !r.ok && hit);
+});
+
+group("DUPLICATE DETECTION");
+DUP.forEach(([name, card, expectOk, gate]) => {
+  const r = validateCard(card, EXISTING);
+  const hit = r.failures.some(f => f.gate === gate);
+  row(++i, name, card, expectOk ? `accepted, flagged ${gate}` : `reject via ${gate}`, r.ok, r.failures, r.ok === expectOk && hit);
+});
+
+group("PINYIN SYLLABLE COUNTER");
+[["nǐ hǎo", 2], ["shēngchǎnxiàn", 3], ["wǒ kěyǐ mǎshàng kāishǐ", 7], ["huài", 1], ["xièxiè", 2], ["shēnfènzhèng", 3], ["tuánduì", 2], ["ér", 1]]
+  .forEach(([roman, want]) => {
+    const got = countPinyinSyllables(roman);
+    row(++i, `count("${roman}")`, { n: roman, r: "" }, `${want} syllables`, got, [], got === want);
+  });
+
+const el = document.getElementById("summary");
+el.className = "summary " + (fail === 0 ? "pass" : "fail");
+el.textContent = fail === 0
+  ? `All ${pass} checks passed.`
+  : `${fail} FAILED, ${pass} passed — do not ship generation until these are green.`;
+</script>
+</body>
+</html>
