@@ -1,2474 +1,392 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Shift Talk — Factory Floor Language Trainer</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1B1E21">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Shift Talk">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" href="icon-192.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-
-html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100%;
-  background: #1B1E21;
-}
-
-.st-root {
-  --bg: #1B1E21;
-  --surface: #24282C;
-  --surface-raised: #2C3136;
-  --steel: #5A7A8F;
-  --steel-dim: #3D5563;
-  --yellow: #FFC53D;
-  --yellow-dim: #8A6C1F;
-  --orange: #E8590C;
-  --red: #D6564F;
-  --green: #5FA777;
-  --text: #ECEAE3;
-  --text-dim: #9BA3AA;
-  --text-faint: #6B7278;
-  --line: #383E44;
-  --rivet: #40464C;
-  --font-display: 'Oswald', sans-serif;
-  --font-body: 'IBM Plex Sans', sans-serif;
-  --font-mono: 'IBM Plex Mono', monospace;
-
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
-  border-radius: 0;
-  padding: 0;
-  overflow: hidden;
-  min-height: 100vh;
-  min-height: 100dvh;
-  width: 100%;
-  position: relative;
-}
-
-.st-root * { box-sizing: border-box; }
-
-/* ---------- hazard stripe ---------- */
-.st-hazard {
-  height: 10px;
-  width: 100%;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--yellow) 0px, var(--yellow) 14px,
-    #1a1a1a 14px, #1a1a1a 28px
-  );
-  flex-shrink: 0;
-}
-
-/* ---------- layout shell ---------- */
-.st-shell {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-.st-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 22px 22px 32px;
-}
-
-/* ---------- header ---------- */
-.st-header {
-  padding: 18px 22px 4px;
-}
-.st-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  color: var(--yellow);
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.st-eyebrow::before {
-  content: "";
-  width: 7px; height: 7px;
-  background: var(--yellow);
-  display: inline-block;
-}
-.st-title {
-  font-family: var(--font-display);
-  font-size: 30px;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-transform: uppercase;
-  margin: 4px 0 2px;
-  color: var(--text);
-}
-.st-subtitle {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-bottom: 14px;
-}
-
-/* ---------- punch card streak strip ---------- */
-.st-punch {
-  display: flex;
-  align-items: stretch;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 18px;
-}
-.st-punch-cell {
-  flex: 1;
-  padding: 10px 14px;
-  border-right: 1px dashed var(--line);
-}
-.st-punch-cell:last-child { border-right: none; }
-.st-punch-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.st-punch-value {
-  font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--yellow);
-  margin-top: 2px;
-}
-
-/* ---------- language tabs (zone signage) ---------- */
-.st-zones {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-.st-zone {
-  flex: 1;
-  background: var(--surface);
-  border: 2px solid var(--line);
-  border-radius: 6px;
-  padding: 12px 10px;
-  cursor: pointer;
-  text-align: center;
-  transition: border-color 0.15s, background 0.15s;
-  font-family: var(--font-body);
-}
-.st-zone:hover { border-color: var(--steel); }
-.st-zone.active {
-  border-color: var(--zone-color, var(--yellow));
-  background: var(--surface-raised);
-}
-.st-zone-chip {
-  width: 26px; height: 26px;
-  border-radius: 4px;
-  background: var(--zone-color, var(--yellow));
-  margin: 0 auto 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: #14161a;
-}
-.st-zone-name {
-  font-family: var(--font-display);
-  font-size: 14px;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-.st-zone-native {
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-top: 1px;
-}
-
-/* ---------- section label ---------- */
-.st-section-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  margin: 4px 0 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-}
-
-/* ---------- category plates ---------- */
-.st-plates {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-.st-plate {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 16px 14px;
-  cursor: pointer;
-  position: relative;
-  transition: transform 0.12s, border-color 0.12s;
-}
-.st-plate:hover { transform: translateY(-2px); border-color: var(--steel); }
-.st-plate::before, .st-plate::after {
-  content: "";
-  position: absolute;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--rivet);
-  top: 8px;
-}
-.st-plate::before { left: 8px; }
-.st-plate::after { right: 8px; }
-.st-plate-icon {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  color: var(--plate-color, var(--steel));
-  margin-bottom: 8px;
-}
-.st-plate-title {
-  font-family: var(--font-display);
-  font-size: 15px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  margin-bottom: 6px;
-}
-.st-plate-bar-track {
-  height: 5px;
-  background: var(--line);
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 6px;
-}
-.st-plate-bar-fill {
-  height: 100%;
-  background: var(--plate-color, var(--steel));
-  border-radius: 3px;
-  transition: width 0.3s;
-}
-.st-plate-meta {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-}
-.st-plate-disabled {
-  cursor: default;
-  opacity: 0.55;
-}
-.st-plate-disabled:hover { transform: none; border-color: var(--line); }
-
-/* ---------- sentence builder ---------- */
-.st-sentence-prompt {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-.st-sentence-en {
-  font-size: 17px;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.st-sentence-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-.st-build-area {
-  min-height: 64px;
-  background: var(--surface-raised);
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  padding: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-content: flex-start;
-  margin-bottom: 14px;
-}
-.st-build-empty {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-faint);
-  padding: 8px;
-}
-.st-chip {
-  background: var(--yellow);
-  color: #14161a;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-  line-height: 1.3;
-}
-.st-chip-roman {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  color: #4a3a08;
-  margin-top: 1px;
-}
-.st-bank {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-  min-height: 44px;
-}
-.st-bank .st-chip {
-  background: var(--surface-raised);
-  color: var(--text);
-  border: 1px solid var(--line);
-}
-.st-bank .st-chip .st-chip-roman { color: var(--text-faint); }
-.st-sentence-actions {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-.st-sentence-actions .st-nav-btn { flex: 1; }
-.st-sentence-result {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 14px;
-  margin-bottom: 14px;
-}
-.st-sentence-correct-line {
-  font-size: 18px;
-  margin: 6px 0 2px;
-}
-.st-sentence-correct-roman {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--yellow);
-}
-
-/* ---------- lesson screen ---------- */
-.st-lesson-top {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.st-back {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  cursor: pointer;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--surface);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.st-back:hover { color: var(--yellow); border-color: var(--yellow); }
-.st-lesson-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  text-transform: uppercase;
-}
-
-.st-mode-toggle {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-.st-mode-btn {
-  flex: 1;
-  min-width: 72px;
-  text-align: center;
-  padding: 9px 4px;
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  background: var(--surface);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  color: var(--text-dim);
-}
-.st-mode-btn.active {
-  background: var(--steel-dim);
-  border-color: var(--steel);
-  color: var(--text);
-}
-
-/* ---------- speak / listen shared ---------- */
-.st-practice-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 26px 20px;
-  text-align: center;
-  margin-bottom: 16px;
-  position: relative;
-}
-.st-mic-btn {
-  width: 68px; height: 68px;
-  border-radius: 50%;
-  background: var(--yellow);
-  color: #14161a;
-  border: none;
-  font-size: 26px;
-  cursor: pointer;
-  margin: 14px auto 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.12s;
-}
-.st-mic-btn:hover { transform: scale(1.06); }
-.st-mic-btn.listening {
-  background: var(--orange);
-  animation: st-pulse 0.6s ease-in-out infinite alternate;
-}
-.st-mic-btn:disabled { opacity: 0.4; cursor: default; }
-.st-mic-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 4px;
-}
-.st-feedback {
-  border-radius: 8px;
-  padding: 12px 14px;
-  margin: 14px 0;
-  text-align: left;
-  font-size: 13px;
-  border: 1px solid var(--line);
-}
-.st-feedback.correct { border-color: var(--green); background: rgba(95,167,119,0.1); color: var(--green); }
-.st-feedback.close { border-color: var(--yellow); background: rgba(255,197,61,0.1); color: var(--yellow); }
-.st-feedback.incorrect { border-color: var(--red); background: rgba(214,86,79,0.1); color: var(--red); }
-.st-feedback-sub {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-dim);
-  margin-top: 4px;
-}
-.st-listen-mystery {
-  font-family: var(--font-mono);
-  font-size: 46px;
-  color: var(--text-faint);
-  letter-spacing: 0.1em;
-  margin-bottom: 6px;
-}
-.st-listen-reveal .st-card-native { font-size: 34px; margin-bottom: 4px; }
-.st-text-fallback {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-.st-text-fallback input {
-  flex: 1;
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  padding: 10px 12px;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 14px;
-}
-.st-text-fallback button {
-  background: var(--yellow);
-  color: #14161a;
-  border: none;
-  border-radius: 5px;
-  padding: 0 16px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-}
-.st-practice-nav {
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-}
-.st-support-note {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-align: center;
-  margin-top: 10px;
-  line-height: 1.5;
-}
-
-/* ---------- sync panel ---------- */
-.st-sync {
-  margin-top: 22px;
-  border: 1px dashed var(--line);
-  border-radius: 8px;
-  padding: 4px 14px;
-  background: var(--surface);
-}
-.st-sync summary {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--yellow);
-  padding: 12px 0;
-  cursor: pointer;
-}
-.st-sync-body { padding-bottom: 16px; }
-.st-sync-body p {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin: 0 0 10px;
-}
-.st-sync-row { margin-bottom: 8px; }
-.st-sync-textarea {
-  width: 100%;
-  background: var(--surface-raised);
-  border: 1px solid var(--line);
-  border-radius: 5px;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  padding: 10px;
-  resize: vertical;
-}
-.st-sync-divider {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 16px 0 8px;
-  border-top: 1px dashed var(--line);
-  padding-top: 14px;
-}
-.st-sync-msg {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  margin-top: 8px;
-}
-.st-sync-msg.ok { color: var(--green); }
-.st-sync-msg.err { color: var(--red); }
-
-.st-qr-wrap {
-  display: flex;
-  justify-content: center;
-  background: #ffffff;
-  padding: 14px;
-  border-radius: 8px;
-  margin: 14px 0;
-}
-.st-sync-fallback {
-  margin-top: 14px;
-  border-top: 1px dashed var(--line);
-  padding-top: 10px;
-}
-.st-sync-fallback summary {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-}
-
-/* ---------- QR scan overlay ---------- */
-.st-scan-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(10, 11, 12, 0.95);
-  z-index: 9999;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-.st-scan-video {
-  width: 100%;
-  max-width: 360px;
-  border-radius: 10px;
-  border: 2px solid var(--yellow);
-  background: #000;
-}
-.st-scan-status {
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  margin-top: 14px;
-  text-align: center;
-  max-width: 320px;
-  line-height: 1.5;
-}
-.st-scan-cancel {
-  margin-top: 18px;
-  padding: 11px 22px;
-  border-radius: 5px;
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-}
-
-/* ---------- flashcard ---------- */
-.st-card-wrap {
-  perspective: 1200px;
-  margin-bottom: 18px;
-}
-.st-card {
-  min-height: 200px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 24px;
-  text-align: center;
-  position: relative;
-}
-.st-card::before {
-  content: attr(data-tag);
-  position: absolute;
-  top: 12px; left: 14px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.st-card-native {
-  font-size: 40px;
-  font-weight: 600;
-  margin-bottom: 8px;
-  line-height: 1.2;
-}
-.st-card-roman {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  color: var(--yellow);
-  margin-bottom: 14px;
-}
-.st-card-english {
-  font-size: 18px;
-  color: var(--text-dim);
-  border-top: 1px dashed var(--line);
-  padding-top: 14px;
-  margin-top: 4px;
-  width: 100%;
-}
-.st-card-hint {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  margin-top: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.st-speak-btn {
-  position: static;
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: var(--yellow);
-  color: #14161a;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  cursor: pointer;
-  margin: 16px auto 0;
-  transition: transform 0.12s, background 0.12s;
-}
-.st-speak-btn:hover { transform: scale(1.08); }
-.st-speak-btn.speaking { background: var(--orange); animation: st-pulse 0.6s ease-in-out infinite alternate; }
-.st-speak-btn.inline {
-  width: 30px; height: 30px;
-  font-size: 13px;
-  margin: 0 0 0 8px;
-  flex-shrink: 0;
-}
-@keyframes st-pulse {
-  from { box-shadow: 0 0 0 0 rgba(232, 89, 12, 0.5); }
-  to { box-shadow: 0 0 0 7px rgba(232, 89, 12, 0); }
-}
-.st-quiz-native-row, .st-card-native-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-}
-.st-voice-note {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  color: var(--text-faint);
-  text-align: center;
-  margin-top: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.st-card-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.st-nav-btn {
-  padding: 10px 16px;
-  border-radius: 5px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.st-nav-btn:hover { border-color: var(--steel); }
-.st-nav-btn:disabled { opacity: 0.35; cursor: default; }
-.st-dots {
-  display: flex; gap: 6px;
-}
-.st-dot {
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: var(--line);
-}
-.st-dot.on { background: var(--yellow); }
-
-/* ---------- quiz ---------- */
-.st-quiz-progress {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.st-quiz-prompt {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 26px 20px;
-  text-align: center;
-  margin-bottom: 16px;
-}
-.st-quiz-native {
-  font-size: 34px;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-.st-quiz-roman {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--yellow);
-}
-.st-quiz-instruction {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-top: 10px;
-}
-.st-options {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.st-option {
-  text-align: left;
-  padding: 13px 16px;
-  border-radius: 6px;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 14px;
-  cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
-}
-.st-option:hover { border-color: var(--steel); }
-.st-option.correct {
-  border-color: var(--green);
-  background: rgba(95, 167, 119, 0.12);
-  color: var(--green);
-}
-.st-option.incorrect {
-  border-color: var(--red);
-  background: rgba(214, 86, 79, 0.12);
-  color: var(--red);
-}
-.st-option.disabled { pointer-events: none; opacity: 0.55; }
-
-.st-quiz-result {
-  text-align: center;
-  padding: 30px 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-.st-quiz-result-score {
-  font-family: var(--font-display);
-  font-size: 44px;
-  color: var(--yellow);
-  margin-bottom: 4px;
-}
-.st-quiz-result-label {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin-bottom: 20px;
-}
-.st-quiz-result-btn {
-  display: inline-block;
-  padding: 11px 22px;
-  border-radius: 5px;
-  background: var(--yellow);
-  color: #14161a;
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  cursor: pointer;
-  border: none;
-  margin: 0 5px;
-}
-.st-quiz-result-btn.secondary {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text-dim);
-}
-
-.st-loading {
-  padding: 60px 20px;
-  text-align: center;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-@media (max-width: 480px) {
-  .st-plates { grid-template-columns: 1fr; }
-  .st-card-native { font-size: 32px; }
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>织 Zhī | Chinese for the Garment Industry</title>
+  <meta name="description" content="Learn Mandarin Chinese vocabulary, grammar, and listening for the garment and textile industry." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-char">织</span>
+        <div class="logo-text">
+          <span class="logo-title">Zhī</span>
+          <span class="logo-sub">Chinese for Garment Workers</span>
+        </div>
+      </div>
+      <nav class="header-nav" id="main-nav">
+        <button class="nav-btn active" data-view="home">Home</button>
+        <button class="nav-btn" data-view="vocabulary">Vocabulary</button>
+        <button class="nav-btn" data-view="flashcards">Flashcards</button>
+        <button class="nav-btn" data-view="grammar">Grammar</button>
+        <button class="nav-btn" data-view="listening">👂 Listening</button>
+        <button class="nav-btn" data-view="quiz">Quiz</button>
+        <button class="nav-btn" data-view="phrasebook">Phrasebook</button>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
 
-<div class="st-root" id="stRoot">
-  <div class="st-hazard"></div>
-  <div class="st-shell">
-    <div id="stApp" class="st-scroll">
-      <div class="st-loading">Loading progress log&hellip;</div>
+  <main id="app">
+
+    <!-- ═══════════════════════════════════════ HOME ══════════════════════════ -->
+    <section class="view active" id="view-home">
+      <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+          <p class="hero-badge">🏭 EPZ Factory Edition</p>
+          <h1 class="hero-title">
+            Learn Chinese<br />
+            <span class="gradient-text">That Actually Works</span><br />
+            on the Factory Floor
+          </h1>
+          <p class="hero-desc">
+            Not tourist phrases. Real Mandarin for garment manufacturing — fabrics, grammar,
+            listening drills, quality control, and workplace survival.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary" onclick="switchView('listening')">👂 Start Listening Lab</button>
+            <button class="btn btn-ghost" onclick="switchView('grammar')">📖 Study Grammar</button>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2 class="section-title">Learning Modules</h2>
+        <p class="section-sub">Tap any module to start</p>
+        <div class="module-grid" id="module-grid">
+          <div class="module-card" onclick="switchView('vocabulary')">
+            <div class="module-icon">📚</div>
+            <div class="module-name">Vocabulary</div>
+            <div class="module-desc">178 factory words across 10 categories</div>
+          </div>
+          <div class="module-card" onclick="switchView('grammar')">
+            <div class="module-icon">📖</div>
+            <div class="module-name">Grammar</div>
+            <div class="module-desc">14 lessons with factory examples & exercises</div>
+          </div>
+          <div class="module-card module-card--highlight" onclick="switchView('listening')">
+            <div class="module-icon">👂</div>
+            <div class="module-name">Listening Lab</div>
+            <div class="module-desc">Hear real Mandarin, quiz your comprehension</div>
+          </div>
+          <div class="module-card" onclick="switchView('flashcards')">
+            <div class="module-icon">🃏</div>
+            <div class="module-name">Flashcards</div>
+            <div class="module-desc">Spaced repetition for all vocabulary</div>
+          </div>
+          <div class="module-card" onclick="switchView('quiz')">
+            <div class="module-icon">🎓</div>
+            <div class="module-name">Quiz</div>
+            <div class="module-desc">Test yourself — Chinese ↔ English</div>
+          </div>
+          <div class="module-card" onclick="switchView('phrasebook')">
+            <div class="module-icon">💬</div>
+            <div class="module-name">Phrasebook</div>
+            <div class="module-desc">Real sentences for real situations</div>
+          </div>
+        </div>
+      </div>
+      <div class="stats-banner">
+        <div class="stat-item">
+          <span class="stat-number" id="stat-total">0</span>
+          <span class="stat-label">Total Words</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-categories">0</span>
+          <span class="stat-label">Vocab Categories</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-grammar">14</span>
+          <span class="stat-label">Grammar Lessons</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-learned">0</span>
+          <span class="stat-label">Words Learned</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="stat-streak">0</span>
+          <span class="stat-label">Day Streak</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ VOCABULARY ═════════════════════════ -->
+    <section class="view" id="view-vocabulary">
+      <div class="vocab-header">
+        <h2>Vocabulary</h2>
+        <div class="vocab-controls">
+          <div class="search-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="vocab-search" placeholder="Search words..." class="search-input" />
+          </div>
+          <select id="category-filter" class="select-input">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <div class="category-tabs" id="category-tabs">
+        <button class="cat-tab active" data-cat="all">All</button>
+      </div>
+      <div class="vocab-grid" id="vocab-grid"></div>
+    </section>
+
+    <!-- ═══════════════════════════════════ FLASHCARDS ════════════════════════ -->
+    <section class="view" id="view-flashcards">
+      <div class="fc-header">
+        <h2>Flashcards</h2>
+        <div class="fc-controls">
+          <select id="fc-category" class="select-input">
+            <option value="all">All Categories</option>
+          </select>
+          <button class="btn btn-sm" id="fc-shuffle">🔀 Shuffle</button>
+        </div>
+      </div>
+      <div class="fc-progress-wrap">
+        <div class="fc-progress-bar"><div class="fc-progress-fill" id="fc-progress-fill"></div></div>
+        <span class="fc-progress-text" id="fc-progress-text">0 / 0</span>
+      </div>
+      <div class="fc-area">
+        <div class="flashcard" id="flashcard" tabindex="0">
+          <div class="flashcard-inner" id="flashcard-inner">
+            <div class="flashcard-front">
+              <div class="fc-category-label" id="fc-cat-label"></div>
+              <div class="fc-chinese" id="fc-chinese"></div>
+              <div class="fc-pinyin" id="fc-pinyin"></div>
+              <div class="fc-hint">Tap to reveal English</div>
+            </div>
+            <div class="flashcard-back">
+              <div class="fc-english" id="fc-english"></div>
+              <div class="fc-example" id="fc-example"></div>
+              <div class="fc-example-pinyin" id="fc-example-pinyin"></div>
+            </div>
+          </div>
+        </div>
+        <div class="fc-nav">
+          <button class="btn btn-ghost btn-icon" id="fc-prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <div class="fc-feedback">
+            <button class="btn-feedback hard" id="fc-hard">😬 Hard</button>
+            <button class="btn-feedback ok" id="fc-ok">👍 Got it</button>
+            <button class="btn-feedback easy" id="fc-easy">🎯 Easy</button>
+          </div>
+          <button class="btn btn-ghost btn-icon" id="fc-next" aria-label="Next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ GRAMMAR ══════════════════════════ -->
+    <section class="view" id="view-grammar">
+      <div class="grammar-layout">
+        <!-- Sidebar: lesson list -->
+        <aside class="grammar-sidebar" id="grammar-sidebar">
+          <div class="grammar-sidebar-header">
+            <h2>Grammar</h2>
+            <p>14 lessons</p>
+          </div>
+          <div class="lesson-list" id="lesson-list"><!-- filled by JS --></div>
+        </aside>
+        <!-- Main: lesson content -->
+        <div class="grammar-main" id="grammar-main">
+          <div class="grammar-landing" id="grammar-landing">
+            <div class="grammar-landing-icon">📖</div>
+            <h2>Chinese Grammar for the Factory Floor</h2>
+            <p>14 structured lessons, from basic word order to the 把 construction. Every example uses garment industry language so what you learn here you use immediately.</p>
+            <button class="btn btn-primary" onclick="openLesson(1)">Start with Lesson 1 →</button>
+          </div>
+          <div class="grammar-lesson hidden" id="grammar-lesson"><!-- filled by JS --></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ LISTENING ══════════════════════════ -->
+    <section class="view" id="view-listening">
+      <!-- Set selection screen -->
+      <div class="listen-wrapper" id="listen-set-select">
+        <div class="listen-hero">
+          <div class="listen-hero-icon">👂</div>
+          <h2>Listening Lab</h2>
+          <p>Hear real Mandarin — factory floor register — and test your comprehension. Audio is generated using Chinese text-to-speech built into your browser.</p>
+          <div class="tts-check" id="tts-check">
+            <span class="tts-dot" id="tts-dot"></span>
+            <span id="tts-status">Checking audio support…</span>
+          </div>
+        </div>
+        <div class="listen-sets-grid" id="listen-sets-grid"><!-- filled by JS --></div>
+      </div>
+
+      <!-- Active exercise screen -->
+      <div class="listen-exercise hidden" id="listen-exercise">
+        <div class="listen-ex-header">
+          <button class="btn btn-ghost btn-sm" id="listen-back">← Back to Sets</button>
+          <div class="listen-ex-meta">
+            <span class="listen-ex-title" id="listen-ex-title"></span>
+            <span class="listen-ex-counter" id="listen-ex-counter"></span>
+          </div>
+        </div>
+        <div class="listen-ex-progress">
+          <div class="listen-ex-progress-fill" id="listen-ex-prog-fill"></div>
+        </div>
+
+        <!-- Audio player card -->
+        <div class="audio-card" id="audio-card">
+          <div class="audio-wave" id="audio-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <button class="audio-play-btn" id="audio-play-btn" aria-label="Play audio">
+            <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+          </button>
+          <div class="audio-controls">
+            <div class="speed-btns">
+              <span class="speed-label">Speed:</span>
+              <button class="speed-btn" data-rate="0.5">0.5×</button>
+              <button class="speed-btn active" data-rate="0.8">0.8×</button>
+              <button class="speed-btn" data-rate="1.0">1×</button>
+            </div>
+            <button class="btn btn-sm btn-ghost" id="audio-replay">↺ Replay</button>
+          </div>
+          <div class="audio-hint">Listen carefully, then choose your answer below</div>
+        </div>
+
+        <!-- Question & Choices -->
+        <div class="listen-question-card" id="listen-question-card">
+          <div class="listen-question-text" id="listen-question-text"></div>
+          <div class="listen-choices" id="listen-choices"><!-- filled by JS --></div>
+        </div>
+
+        <!-- Reveal / Feedback -->
+        <div class="listen-reveal hidden" id="listen-reveal">
+          <div class="reveal-header" id="reveal-header"></div>
+          <div class="reveal-body">
+            <div class="reveal-cn" id="reveal-cn"></div>
+            <div class="reveal-py" id="reveal-py"></div>
+            <div class="reveal-en" id="reveal-en"></div>
+          </div>
+          <button class="btn btn-primary" id="listen-next-btn">Next →</button>
+        </div>
+      </div>
+
+      <!-- Results screen -->
+      <div class="listen-result hidden" id="listen-result">
+        <div class="result-emoji" id="lr-emoji">🎉</div>
+        <h2 class="result-title">Set Complete!</h2>
+        <div class="result-score-wrap">
+          <div class="result-score-circle">
+            <span class="result-score-num" id="lr-score-num">0</span>
+            <span class="result-score-den" id="lr-score-den">/ 0</span>
+          </div>
+        </div>
+        <p class="result-msg" id="lr-msg"></p>
+        <div class="result-actions">
+          <button class="btn btn-primary" id="lr-retry">Retry Set</button>
+          <button class="btn btn-ghost" onclick="showListenSets()">Try Another Set</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════════════ QUIZ ═════════════════════════════ -->
+    <section class="view" id="view-quiz">
+      <div class="quiz-wrapper" id="quiz-wrapper">
+        <div class="quiz-start" id="quiz-start">
+          <div class="quiz-start-icon">🎓</div>
+          <h2>Test Your Knowledge</h2>
+          <p>Choose a category and test what you've learned.</p>
+          <div class="quiz-options">
+            <label>Category</label>
+            <select id="quiz-category" class="select-input"><option value="all">All Categories</option></select>
+            <label>Question Type</label>
+            <div class="quiz-type-btns">
+              <button class="type-btn active" data-type="cn-to-en">Chinese → English</button>
+              <button class="type-btn" data-type="en-to-cn">English → Chinese</button>
+            </div>
+            <label>Number of Questions</label>
+            <div class="quiz-count-btns">
+              <button class="count-btn active" data-count="10">10</button>
+              <button class="count-btn" data-count="20">20</button>
+              <button class="count-btn" data-count="30">30</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg" id="start-quiz">Start Quiz</button>
+        </div>
+        <div class="quiz-game hidden" id="quiz-game">
+          <div class="quiz-top">
+            <span class="quiz-counter" id="quiz-counter">Q 1 / 10</span>
+            <div class="quiz-score-wrap"><span class="quiz-score-label">Score</span><span class="quiz-score" id="quiz-score">0</span></div>
+          </div>
+          <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quiz-progress-fill"></div></div>
+          <div class="quiz-card" id="quiz-card">
+            <div class="quiz-question-label" id="quiz-q-label"></div>
+            <div class="quiz-question" id="quiz-question"></div>
+            <div class="quiz-pinyin" id="quiz-pinyin"></div>
+            <div class="quiz-choices" id="quiz-choices"></div>
+          </div>
+        </div>
+        <div class="quiz-result hidden" id="quiz-result">
+          <div class="result-emoji" id="result-emoji">🎉</div>
+          <h2 class="result-title">Quiz Complete!</h2>
+          <div class="result-score-wrap">
+            <div class="result-score-circle">
+              <span class="result-score-num" id="result-score-num">0</span>
+              <span class="result-score-den" id="result-score-den">/ 10</span>
+            </div>
+          </div>
+          <p class="result-msg" id="result-msg"></p>
+          <div class="result-actions">
+            <button class="btn btn-primary" id="quiz-retry">Try Again</button>
+            <button class="btn btn-ghost" onclick="switchView('vocabulary')">Study More</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════ PHRASEBOOK ═════════════════════════ -->
+    <section class="view" id="view-phrasebook">
+      <div class="phrasebook-header">
+        <h2>Phrasebook</h2>
+        <p>Real sentences for real situations on the factory floor</p>
+      </div>
+      <div class="phrase-categories" id="phrase-categories"></div>
+      <div class="phrase-list" id="phrase-list"></div>
+    </section>
+
+  </main>
+
+  <!-- Word Detail Modal -->
+  <div class="modal-overlay" id="modal-overlay" aria-modal="true" role="dialog">
+    <div class="modal" id="word-modal">
+      <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      <div class="modal-chinese" id="modal-chinese"></div>
+      <div class="modal-pinyin" id="modal-pinyin"></div>
+      <div class="modal-english" id="modal-english"></div>
+      <div class="modal-category" id="modal-category"></div>
+      <div class="modal-divider"></div>
+      <div class="modal-example-section">
+        <p class="modal-label">Example Usage</p>
+        <div class="modal-example-cn" id="modal-example-cn"></div>
+        <div class="modal-example-pinyin" id="modal-example-pinyin"></div>
+        <div class="modal-example-en" id="modal-example-en"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-sm btn-primary" id="modal-add-fc">Add to Flashcards</button>
+        <button class="modal-mark-btn" id="modal-mark-known">Mark as Learned ✓</button>
+      </div>
     </div>
   </div>
-  <div class="st-hazard"></div>
-</div>
 
-<script type="module">
-import {
-  buildDeck, cardId, loadEvents, recordEvent, foldMastery, isMastered,
-  loadGeneratedCards, loadMeta, saveMeta, mergeEvents,
-} from "./js/store.js";
-import { runMigration, sentenceId } from "./js/migrate.js";
-import { syncWithFirebase } from "./js/firebase.js";
-
-(function () {
-  const root = document.getElementById('stRoot');
-  const app = document.getElementById('stApp');
-
-  // ---------------- vocab data ----------------
-  // The seed deck. buildDeck() below re-exports it as VOCAB with a stable `id`
-  // on every word, so nothing downstream has to change.
-  const SEED_VOCAB = {
-    zh: {
-      name: "Mandarin", native: "中文", color: "#D6564F", code: "ZH",
-      categories: {
-        greetings: { label: "Greetings & Respect", icon: "礼", words: [
-          { n: "你好", r: "nǐ hǎo", e: "Hello" },
-          { n: "谢谢", r: "xièxiè", e: "Thank you" },
-          { n: "请", r: "qǐng", e: "Please" },
-          { n: "对不起", r: "duìbùqǐ", e: "Sorry" },
-          { n: "早上好", r: "zǎoshang hǎo", e: "Good morning" },
-          { n: "师傅", r: "shīfu", e: "Skilled worker (respectful term)" },
-          { n: "再见", r: "zàijiàn", e: "Goodbye" },
-          { n: "老板", r: "lǎobǎn", e: "Boss" },
-        ]},
-        machines: { label: "Machines & the Line", icon: "机", words: [
-          { n: "机器", r: "jīqì", e: "Machine" },
-          { n: "生产线", r: "shēngchǎnxiàn", e: "Production line" },
-          { n: "零件", r: "língjiàn", e: "Parts" },
-          { n: "工具", r: "gōngjù", e: "Tool" },
-          { n: "检查", r: "jiǎnchá", e: "Inspect" },
-          { n: "包装", r: "bāozhuāng", e: "Packaging" },
-          { n: "生产", r: "shēngchǎn", e: "Production" },
-          { n: "维修", r: "wéixiū", e: "Repair / maintenance" },
-        ]},
-        safety: { label: "Safety & Hazards", icon: "危", words: [
-          { n: "安全", r: "ānquán", e: "Safety" },
-          { n: "小心", r: "xiǎoxīn", e: "Be careful" },
-          { n: "危险", r: "wēixiǎn", e: "Danger" },
-          { n: "手套", r: "shǒutào", e: "Gloves" },
-          { n: "停", r: "tíng", e: "Stop" },
-          { n: "出口", r: "chūkǒu", e: "Exit" },
-          { n: "头盔", r: "tóukuī", e: "Helmet" },
-          { n: "事故", r: "shìgù", e: "Accident" },
-        ]},
-        shifts: { label: "Shifts & Time", icon: "班", words: [
-          { n: "班次", r: "bāncì", e: "Shift" },
-          { n: "上班", r: "shàngbān", e: "Clock in" },
-          { n: "下班", r: "xiàbān", e: "Clock out" },
-          { n: "加班", r: "jiābān", e: "Overtime" },
-          { n: "休息", r: "xiūxi", e: "Break" },
-          { n: "迟到", r: "chídào", e: "Late" },
-          { n: "周末", r: "zhōumò", e: "Weekend" },
-          { n: "请假", r: "qǐngjià", e: "Ask for leave" },
-        ]},
-        team: { label: "Supervisors & Team", icon: "队", words: [
-          { n: "主管", r: "zhǔguǎn", e: "Supervisor" },
-          { n: "经理", r: "jīnglǐ", e: "Manager" },
-          { n: "同事", r: "tóngshì", e: "Colleague" },
-          { n: "帮助", r: "bāngzhù", e: "Help" },
-          { n: "明白", r: "míngbai", e: "Understand" },
-          { n: "报告", r: "bàogào", e: "Report" },
-          { n: "会议", r: "huìyì", e: "Meeting" },
-          { n: "团队", r: "tuánduì", e: "Team" },
-        ]},
-        jobsearch: { label: "Job Search & Interview", icon: "职", words: [
-          { n: "找工作", r: "zhǎo gōngzuò", e: "Look for a job" },
-          { n: "工资", r: "gōngzī", e: "Salary / wage" },
-          { n: "经验", r: "jīngyàn", e: "Experience" },
-          { n: "简历", r: "jiǎnlì", e: "Resume / CV" },
-          { n: "面试", r: "miànshì", e: "Interview" },
-          { n: "我可以马上开始", r: "wǒ kěyǐ mǎshàng kāishǐ", e: "I can start immediately" },
-          { n: "合同", r: "hétong", e: "Contract" },
-          { n: "身份证", r: "shēnfènzhèng", e: "ID card" },
-        ]},
-        grammar: { label: "Grammar Basics", icon: "句", words: [
-          { n: "我", r: "wǒ", e: "I / me" },
-          { n: "你", r: "nǐ", e: "You" },
-          { n: "我们", r: "wǒmen", e: "We" },
-          { n: "是", r: "shì", e: "To be (am/is/are)" },
-          { n: "有", r: "yǒu", e: "To have / there is" },
-          { n: "要", r: "yào", e: "Want / need to" },
-          { n: "可以", r: "kěyǐ", e: "Can / may" },
-          { n: "需要", r: "xūyào", e: "Need" },
-          { n: "这个", r: "zhège", e: "This" },
-          { n: "这里", r: "zhèlǐ", e: "Here" },
-          { n: "很", r: "hěn", e: "Very" },
-          { n: "什么", r: "shénme", e: "What" },
-          { n: "今天", r: "jīntiān", e: "Today" },
-          { n: "明天", r: "míngtiān", e: "Tomorrow" },
-          { n: "坏", r: "huài", e: "Broken" },
-          { n: "在", r: "zài", e: "At / -ing (in the middle of)" },
-        ]},
-      }
-    },
-    ja: {
-      name: "Japanese", native: "日本語", color: "#5A7ED6", code: "JA",
-      categories: {
-        greetings: { label: "Greetings & Respect", icon: "礼", words: [
-          { n: "こんにちは", r: "konnichiwa", e: "Hello" },
-          { n: "ありがとうございます", r: "arigatou gozaimasu", e: "Thank you" },
-          { n: "すみません", r: "sumimasen", e: "Excuse me / Sorry" },
-          { n: "お願いします", r: "onegaishimasu", e: "Please" },
-          { n: "おはようございます", r: "ohayou gozaimasu", e: "Good morning" },
-          { n: "お疲れ様です", r: "otsukaresama desu", e: "Thanks for your hard work" },
-          { n: "さようなら", r: "sayounara", e: "Goodbye" },
-          { n: "部長", r: "buchou", e: "Department head / boss" },
-        ]},
-        machines: { label: "Machines & the Line", icon: "機", words: [
-          { n: "機械", r: "kikai", e: "Machine" },
-          { n: "生産ライン", r: "seisan rain", e: "Production line" },
-          { n: "部品", r: "buhin", e: "Parts" },
-          { n: "工具", r: "kougu", e: "Tool" },
-          { n: "検査", r: "kensa", e: "Inspection" },
-          { n: "梱包", r: "konpou", e: "Packaging" },
-          { n: "生産", r: "seisan", e: "Production" },
-          { n: "修理", r: "shuuri", e: "Repair" },
-        ]},
-        safety: { label: "Safety & Hazards", icon: "危", words: [
-          { n: "安全", r: "anzen", e: "Safety" },
-          { n: "気をつけて", r: "ki wo tsukete", e: "Be careful" },
-          { n: "危険", r: "kiken", e: "Danger" },
-          { n: "手袋", r: "tebukuro", e: "Gloves" },
-          { n: "止まれ", r: "tomare", e: "Stop" },
-          { n: "出口", r: "deguchi", e: "Exit" },
-          { n: "ヘルメット", r: "herumetto", e: "Helmet" },
-          { n: "事故", r: "jiko", e: "Accident" },
-        ]},
-        shifts: { label: "Shifts & Time", icon: "勤", words: [
-          { n: "シフト", r: "shifuto", e: "Shift" },
-          { n: "出勤", r: "shukkin", e: "Clock in" },
-          { n: "退勤", r: "taikin", e: "Clock out" },
-          { n: "残業", r: "zangyou", e: "Overtime" },
-          { n: "休憩", r: "kyuukei", e: "Break" },
-          { n: "遅刻", r: "chikoku", e: "Late" },
-          { n: "週末", r: "shuumatsu", e: "Weekend" },
-          { n: "休暇", r: "kyuuka", e: "Leave / vacation" },
-        ]},
-        team: { label: "Supervisors & Team", icon: "隊", words: [
-          { n: "上司", r: "joushi", e: "Supervisor" },
-          { n: "マネージャー", r: "manejaa", e: "Manager" },
-          { n: "同僚", r: "douryou", e: "Colleague" },
-          { n: "手伝う", r: "tetsudau", e: "To help" },
-          { n: "わかりました", r: "wakarimashita", e: "Understood" },
-          { n: "報告", r: "houkoku", e: "Report" },
-          { n: "会議", r: "kaigi", e: "Meeting" },
-          { n: "チーム", r: "chiimu", e: "Team" },
-        ]},
-        jobsearch: { label: "Job Search & Interview", icon: "職", words: [
-          { n: "仕事を探しています", r: "shigoto wo sagashiteimasu", e: "I am looking for a job" },
-          { n: "給料", r: "kyuuryou", e: "Salary" },
-          { n: "経験", r: "keiken", e: "Experience" },
-          { n: "履歴書", r: "rirekisho", e: "Resume / CV" },
-          { n: "面接", r: "mensetsu", e: "Interview" },
-          { n: "すぐ始められます", r: "sugu hajimeraremasu", e: "I can start immediately" },
-          { n: "契約", r: "keiyaku", e: "Contract" },
-          { n: "身分証明書", r: "mibun shoumeisho", e: "ID card" },
-        ]},
-        grammar: { label: "Grammar Basics", icon: "句", words: [
-          { n: "私", r: "watashi", e: "I / me" },
-          { n: "あなた", r: "anata", e: "You" },
-          { n: "私たち", r: "watashitachi", e: "We" },
-          { n: "です", r: "desu", e: "To be (am/is/are)" },
-          { n: "あります", r: "arimasu", e: "To have / there is" },
-          { n: "欲しいです", r: "hoshii desu", e: "Want" },
-          { n: "できます", r: "dekimasu", e: "Can / able to" },
-          { n: "必要です", r: "hitsuyou desu", e: "Need" },
-          { n: "これ", r: "kore", e: "This" },
-          { n: "ここ", r: "koko", e: "Here" },
-          { n: "とても", r: "totemo", e: "Very" },
-          { n: "何", r: "nani", e: "What" },
-          { n: "今日", r: "kyou", e: "Today" },
-          { n: "明日", r: "ashita", e: "Tomorrow" },
-          { n: "壊れた", r: "kowareta", e: "Broken" },
-          { n: "今", r: "ima", e: "Now" },
-        ]},
-      }
-    },
-    ko: {
-      name: "Korean", native: "한국어", color: "#5AAE8F", code: "KO",
-      categories: {
-        greetings: { label: "Greetings & Respect", icon: "례", words: [
-          { n: "안녕하세요", r: "annyeonghaseyo", e: "Hello" },
-          { n: "감사합니다", r: "gamsahamnida", e: "Thank you" },
-          { n: "죄송합니다", r: "joesonghamnida", e: "Sorry" },
-          { n: "부탁합니다", r: "butakhamnida", e: "Please" },
-          { n: "안녕히 가세요", r: "annyeonghi gaseyo", e: "Goodbye" },
-          { n: "수고하셨습니다", r: "sugohasyeotseumnida", e: "Thanks for your hard work" },
-          { n: "사장님", r: "sajangnim", e: "Boss" },
-          { n: "팀장님", r: "timjangnim", e: "Team leader" },
-        ]},
-        machines: { label: "Machines & the Line", icon: "機", words: [
-          { n: "기계", r: "gigye", e: "Machine" },
-          { n: "생산라인", r: "saengsan rain", e: "Production line" },
-          { n: "부품", r: "bupum", e: "Parts" },
-          { n: "공구", r: "gonggu", e: "Tool" },
-          { n: "검사", r: "geomsa", e: "Inspection" },
-          { n: "포장", r: "pojang", e: "Packaging" },
-          { n: "생산", r: "saengsan", e: "Production" },
-          { n: "수리", r: "suri", e: "Repair" },
-        ]},
-        safety: { label: "Safety & Hazards", icon: "危", words: [
-          { n: "안전", r: "anjeon", e: "Safety" },
-          { n: "조심하세요", r: "josimhaseyo", e: "Be careful" },
-          { n: "위험", r: "wiheom", e: "Danger" },
-          { n: "장갑", r: "janggap", e: "Gloves" },
-          { n: "정지", r: "jeongji", e: "Stop" },
-          { n: "출구", r: "chulgu", e: "Exit" },
-          { n: "헬멧", r: "helmet", e: "Helmet" },
-          { n: "사고", r: "sago", e: "Accident" },
-        ]},
-        shifts: { label: "Shifts & Time", icon: "勤", words: [
-          { n: "교대", r: "gyodae", e: "Shift" },
-          { n: "출근", r: "chulgeun", e: "Clock in" },
-          { n: "퇴근", r: "toegeun", e: "Clock out" },
-          { n: "야근", r: "yageun", e: "Overtime" },
-          { n: "휴식", r: "hyusik", e: "Break" },
-          { n: "지각", r: "jigak", e: "Late" },
-          { n: "주말", r: "jumal", e: "Weekend" },
-          { n: "휴가", r: "hyuga", e: "Leave / vacation" },
-        ]},
-        team: { label: "Supervisors & Team", icon: "隊", words: [
-          { n: "상사", r: "sangsa", e: "Supervisor" },
-          { n: "매니저", r: "maenijeo", e: "Manager" },
-          { n: "동료", r: "dongryo", e: "Colleague" },
-          { n: "도와주다", r: "dowajuda", e: "To help" },
-          { n: "알겠습니다", r: "algesseumnida", e: "Understood" },
-          { n: "보고", r: "bogo", e: "Report" },
-          { n: "회의", r: "hoeui", e: "Meeting" },
-          { n: "팀", r: "tim", e: "Team" },
-        ]},
-        jobsearch: { label: "Job Search & Interview", icon: "직", words: [
-          { n: "일자리를 찾고 있어요", r: "iljarireul chatgo isseoyo", e: "I am looking for a job" },
-          { n: "월급", r: "wolgeup", e: "Salary" },
-          { n: "경력", r: "gyeongryeok", e: "Experience" },
-          { n: "이력서", r: "iryeokseo", e: "Resume / CV" },
-          { n: "면접", r: "myeonjeop", e: "Interview" },
-          { n: "바로 시작할 수 있어요", r: "baro sijakhal su isseoyo", e: "I can start immediately" },
-          { n: "계약", r: "gyeyak", e: "Contract" },
-          { n: "신분증", r: "sinbunjeung", e: "ID card" },
-        ]},
-        grammar: { label: "Grammar Basics", icon: "구", words: [
-          { n: "저", r: "jeo", e: "I / me" },
-          { n: "당신", r: "dangsin", e: "You" },
-          { n: "우리", r: "uri", e: "We" },
-          { n: "이에요", r: "ieyo", e: "To be (am/is/are)" },
-          { n: "있어요", r: "isseoyo", e: "To have / there is" },
-          { n: "원해요", r: "wonhaeyo", e: "Want" },
-          { n: "할 수 있어요", r: "hal su isseoyo", e: "Can / able to" },
-          { n: "필요해요", r: "piryohaeyo", e: "Need" },
-          { n: "이것", r: "igeot", e: "This" },
-          { n: "여기", r: "yeogi", e: "Here" },
-          { n: "아주", r: "aju", e: "Very" },
-          { n: "뭐", r: "mwo", e: "What" },
-          { n: "오늘", r: "oneul", e: "Today" },
-          { n: "내일", r: "naeil", e: "Tomorrow" },
-          { n: "고장났어요", r: "gojangnasseoyo", e: "Broken" },
-          { n: "지금", r: "jigeum", e: "Now" },
-        ]},
-      }
-    }
-  };
-
-  const CATEGORY_ORDER = ["greetings", "machines", "safety", "shifts", "team", "jobsearch", "grammar"];
-
-  // Every word gains a stable, content-derived `id`. Card identity no longer
-  // depends on array position, so the deck can grow without corrupting progress.
-  const VOCAB = buildDeck(SEED_VOCAB, loadGeneratedCards());
-
-  // Legacy: still used by the QR sync path, which stays as an offline fallback.
-  // Not a limit on the deck any more — mastery is keyed by id, not by bit index.
-  const SYNC_EVENT_LIMIT = 250;
-
-  // ---------------- sentence-building practice ----------------
-  // Chinese first, as requested — other languages can follow the same shape later.
-  const SENTENCES = {
-    zh: [
-      { en: "I am looking for a job.", chunks: [
-        { c: "我", r: "wǒ" }, { c: "在", r: "zài" }, { c: "找工作", r: "zhǎo gōngzuò" },
-      ]},
-      { en: "I can start immediately.", chunks: [
-        { c: "我", r: "wǒ" }, { c: "可以", r: "kěyǐ" }, { c: "马上", r: "mǎshàng" }, { c: "开始", r: "kāishǐ" },
-      ]},
-      { en: "Please inspect this part.", chunks: [
-        { c: "请", r: "qǐng" }, { c: "检查", r: "jiǎnchá" }, { c: "这个", r: "zhège" }, { c: "零件", r: "língjiàn" },
-      ]},
-      { en: "The machine is broken.", chunks: [
-        { c: "机器", r: "jīqì" }, { c: "坏", r: "huài" }, { c: "了", r: "le" },
-      ]},
-      { en: "I need help.", chunks: [
-        { c: "我", r: "wǒ" }, { c: "需要", r: "xūyào" }, { c: "帮助", r: "bāngzhù" },
-      ]},
-      { en: "It's very dangerous here.", chunks: [
-        { c: "这里", r: "zhèlǐ" }, { c: "很", r: "hěn" }, { c: "危险", r: "wēixiǎn" },
-      ]},
-      { en: "What time do I get off work?", chunks: [
-        { c: "我", r: "wǒ" }, { c: "几点", r: "jǐ diǎn" }, { c: "下班", r: "xiàbān" },
-      ]},
-      { en: "Thank you for your help.", chunks: [
-        { c: "谢谢", r: "xièxiè" }, { c: "你的", r: "nǐ de" }, { c: "帮助", r: "bāngzhù" },
-      ]},
-      { en: "I was late today.", chunks: [
-        { c: "我", r: "wǒ" }, { c: "今天", r: "jīntiān" }, { c: "迟到", r: "chídào" }, { c: "了", r: "le" },
-      ]},
-      { en: "I understand.", chunks: [
-        { c: "我", r: "wǒ" }, { c: "明白", r: "míngbai" }, { c: "了", r: "le" },
-      ]},
-    ],
-    // Japanese and Korean are both SOV (verb last) and mark grammatical roles
-    // with particles rather than word order — chunks are grouped the way a
-    // native speaker would naturally write them (word + attached particle).
-    ja: [
-      { en: "I am looking for a job.", chunks: [
-        { c: "私は", r: "watashi wa" }, { c: "仕事を", r: "shigoto o" }, { c: "探しています", r: "sagashiteimasu" },
-      ]},
-      { en: "I can start immediately.", chunks: [
-        { c: "すぐに", r: "sugu ni" }, { c: "始められます", r: "hajimeraremasu" },
-      ]},
-      { en: "Please inspect this part.", chunks: [
-        { c: "これを", r: "kore o" }, { c: "検査してください", r: "kensa shite kudasai" },
-      ]},
-      { en: "The machine is broken.", chunks: [
-        { c: "機械が", r: "kikai ga" }, { c: "壊れました", r: "kowaremashita" },
-      ]},
-      { en: "I need help.", chunks: [
-        { c: "私は", r: "watashi wa" }, { c: "手伝いが", r: "tetsudai ga" }, { c: "必要です", r: "hitsuyou desu" },
-      ]},
-      { en: "It's very dangerous here.", chunks: [
-        { c: "ここは", r: "koko wa" }, { c: "とても", r: "totemo" }, { c: "危険です", r: "kiken desu" },
-      ]},
-      { en: "What time do I get off work?", chunks: [
-        { c: "何時に", r: "nanji ni" }, { c: "退勤しますか", r: "taikin shimasu ka" },
-      ]},
-      { en: "Thank you for your help.", chunks: [
-        { c: "手伝ってくれて", r: "tetsudatte kurete" }, { c: "ありがとうございます", r: "arigatou gozaimasu" },
-      ]},
-      { en: "I was late today.", chunks: [
-        { c: "今日", r: "kyou" }, { c: "遅刻しました", r: "chikoku shimashita" },
-      ]},
-      { en: "I understand.", chunks: [
-        { c: "わかりました", r: "wakarimashita" },
-      ]},
-    ],
-    ko: [
-      { en: "I am looking for a job.", chunks: [
-        { c: "저는", r: "jeoneun" }, { c: "일자리를", r: "iljarireul" }, { c: "찾고 있어요", r: "chatgo isseoyo" },
-      ]},
-      { en: "I can start immediately.", chunks: [
-        { c: "바로", r: "baro" }, { c: "시작할 수 있어요", r: "sijakhal su isseoyo" },
-      ]},
-      { en: "Please inspect this part.", chunks: [
-        { c: "이", r: "i" }, { c: "부품을", r: "bupumeul" }, { c: "검사해 주세요", r: "geomsahae juseyo" },
-      ]},
-      { en: "The machine is broken.", chunks: [
-        { c: "기계가", r: "gigyega" }, { c: "고장났어요", r: "gojangnasseoyo" },
-      ]},
-      { en: "I need help.", chunks: [
-        { c: "저는", r: "jeoneun" }, { c: "도움이", r: "doumi" }, { c: "필요해요", r: "piryohaeyo" },
-      ]},
-      { en: "It's very dangerous here.", chunks: [
-        { c: "여기는", r: "yeogineun" }, { c: "아주", r: "aju" }, { c: "위험해요", r: "wiheomhaeyo" },
-      ]},
-      { en: "What time do I get off work?", chunks: [
-        { c: "몇", r: "myeot" }, { c: "시에", r: "sie" }, { c: "퇴근해요", r: "toegeunhaeyo" },
-      ]},
-      { en: "Thank you for your help.", chunks: [
-        { c: "도와주셔서", r: "dowajusyeoseo" }, { c: "감사합니다", r: "gamsahamnida" },
-      ]},
-      { en: "I was late today.", chunks: [
-        { c: "오늘", r: "oneul" }, { c: "지각했어요", r: "jigakhaesseoyo" },
-      ]},
-      { en: "I understand.", chunks: [
-        { c: "알겠습니다", r: "algesseumnida" },
-      ]},
-    ],
-  };
-
-  const TTS_LANG = { zh: "zh-CN", ja: "ja-JP", ko: "ko-KR" };
-  const MALE_VOICE_HINTS = {
-    zh: ["kangkang", "yunxi", "yunyang", "yunjian", "yunfeng", "zhiwei", "male"],
-    ja: ["ichiro", "keita", "otoya", "daichi", "male"],
-    ko: ["injoon", "hyunsu", "male"],
-  };
-  const FEMALE_VOICE_HINTS = {
-    zh: ["yaoyao", "xiaoxiao", "huihui", "tingting", "xiaoyi", "female"],
-    ja: ["haruka", "kyoko", "nanami", "ayumi", "female"],
-    ko: ["heami", "sunhi", "female"],
-  };
-  let voicesReady = false;
-  let cachedVoices = [];
-
-  function loadVoices() {
-    if (!('speechSynthesis' in window)) return;
-    cachedVoices = window.speechSynthesis.getVoices();
-    if (cachedVoices.length) voicesReady = true;
-  }
-  if ('speechSynthesis' in window) {
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-  }
-
-  function pickVoice(bcp47, langCode) {
-    if (!cachedVoices.length) loadVoices();
-    const langVoices = cachedVoices.filter(v => v.lang === bcp47 || (v.lang && v.lang.startsWith(bcp47.split('-')[0])));
-    if (!langVoices.length) return { voice: null, isMaleMatch: false };
-    const maleHints = MALE_VOICE_HINTS[langCode] || [];
-    const male = langVoices.find(v => maleHints.some(h => v.name.toLowerCase().includes(h)));
-    if (male) return { voice: male, isMaleMatch: true };
-    const femaleHints = FEMALE_VOICE_HINTS[langCode] || [];
-    const nonFemale = langVoices.find(v => !femaleHints.some(h => v.name.toLowerCase().includes(h)));
-    return { voice: nonFemale || langVoices[0], isMaleMatch: false };
-  }
-
-  function speak(text, langCode, btnEl) {
-    if (!('speechSynthesis' in window)) {
-      if (btnEl) btnEl.title = "Voice not supported on this device";
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    const bcp47 = TTS_LANG[langCode] || "en-US";
-    utter.lang = bcp47;
-    utter.rate = 0.82;
-    const { voice, isMaleMatch } = pickVoice(bcp47, langCode);
-    if (voice) utter.voice = voice;
-    // Deepen the pitch so it reads as a lower, more masculine voice.
-    // If we already matched a known male voice, only a slight nudge is needed.
-    utter.pitch = isMaleMatch ? 0.9 : 0.68;
-    if (btnEl) {
-      utter.onstart = () => btnEl.classList.add('speaking');
-      utter.onend = () => btnEl.classList.remove('speaking');
-      utter.onerror = () => btnEl.classList.remove('speaking');
-    }
-    window.speechSynthesis.speak(utter);
-  }
-
-  // ---------------- speech recognition (STT) helpers ----------------
-  const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const sttSupported = !!SpeechRecognitionCtor;
-
-  function normalizeNative(s) {
-    return (s || "").replace(/[\s,.!?、。！？，·・]/g, "").toLowerCase();
-  }
-
-  function levenshtein(a, b) {
-    const m = a.length, n = b.length;
-    if (m === 0) return n;
-    if (n === 0) return m;
-    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
-      }
-    }
-    return dp[m][n];
-  }
-
-  function gradeNativeAttempt(expectedNative, recognizedRaw) {
-    const expected = normalizeNative(expectedNative);
-    const recognized = normalizeNative(recognizedRaw);
-    if (!recognized) return { grade: "incorrect", recognized: recognizedRaw };
-    if (recognized === expected) return { grade: "correct", recognized: recognizedRaw };
-    // recognized text containing the expected string (or vice versa) covers cases
-    // where the recognizer picks up a trailing particle or filler
-    if (recognized.includes(expected) || expected.includes(recognized)) {
-      return { grade: "close", recognized: recognizedRaw };
-    }
-    const dist = levenshtein(expected, recognized);
-    const threshold = Math.max(1, Math.floor(expected.length * 0.4));
-    if (dist <= threshold) return { grade: "close", recognized: recognizedRaw };
-    return { grade: "incorrect", recognized: recognizedRaw };
-  }
-
-  const ENGLISH_STOPWORDS = new Set(["a","an","the","to","your","you","is","are","of","for","on","in","at","it","be","me","i","my","this","that"]);
-
-  function gradeEnglishAttempt(expectedEnglish, userText) {
-    const cleanExpected = expectedEnglish.toLowerCase().replace(/[^a-z\s]/g, "");
-    const expWords = cleanExpected.split(/\s+/).filter(w => w && !ENGLISH_STOPWORDS.has(w));
-    const cleanUser = " " + userText.toLowerCase().replace(/[^a-z\s]/g, "") + " ";
-    if (!expWords.length) return { grade: "incorrect" };
-    const hits = expWords.filter(w => cleanUser.includes(" " + w) || cleanUser.includes(w)).length;
-    const ratio = hits / expWords.length;
-    if (ratio >= 0.99) return { grade: "correct" };
-    if (ratio >= 0.4) return { grade: "close" };
-    return { grade: "incorrect" };
-  }
-
-  function runRecognition(bcp47, onResult, onError) {
-    if (!sttSupported) { onError("unsupported"); return; }
-    let rec;
-    try {
-      rec = new SpeechRecognitionCtor();
-    } catch (e) { onError("unsupported"); return; }
-    rec.lang = bcp47;
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    rec.continuous = false;
-    let settled = false;
-    rec.onresult = (ev) => {
-      settled = true;
-      const text = ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : "";
-      onResult(text);
-    };
-    rec.onerror = (ev) => {
-      if (settled) return;
-      settled = true;
-      onError(ev.error || "error");
-    };
-    rec.onend = () => {
-      if (!settled) { settled = true; onError("no-speech"); }
-    };
-    try { rec.start(); } catch (e) { onError("unsupported"); }
-    return rec;
-  }
-
-  // ---------------- state ----------------
-  let state = {
-    lang: "zh",
-    view: "home",        // home | lesson
-    category: null,
-    mode: "learn",        // learn | quiz
-    cardIndex: 0,
-    flipped: false,
-    quiz: null,           // { qIndex, questions, score, answered }
-    lastSpokenKey: null,
-    speak: null,           // { idx, phase, result }
-    listen: null,          // { idx, phase, result, typed }
-    syncPanelOpen: false,
-    syncMsg: null,          // { text, ok }
-    syncOutCode: null,
-    syncShowQr: false,
-    sentence: null,        // { idx, placed: [chunkIdx...], bankOrder: [...], checked, correct }
-  };
-  let activeRecognition = null;
-
-  let progress = null; // derived view, rebuilt from the event log
-
-  // ---------------- derived progress ----------------
-  // `progress` is no longer stored — it is a VIEW recomputed by folding the
-  // append-only event log. Every render site still reads .mastered.length and
-  // .bestScore exactly as before, so the UI code is untouched.
-  let events = [];
-  let meta = loadMeta();
-  let mastery = new Map();
-
-  function sentenceIdsFor(lang) {
-    return (SENTENCES[lang] || []).map(s => sentenceId(lang, s));
-  }
-
-  function rebuildProgress() {
-    mastery = foldMastery(events);
-    const attempts = {};
-    events.forEach(e => {
-      if (e.mode === "flag") return;
-      const k = `${e.lang}.${e.category}`;
-      attempts[k] = (attempts[k] || 0) + 1;
-    });
-    progress = { streak: meta.streak, lastVisit: meta.lastVisit, langs: {}, sentences: {} };
-    Object.keys(VOCAB).forEach(l => {
-      progress.langs[l] = {};
-      CATEGORY_ORDER.forEach(c => {
-        progress.langs[l][c] = {
-          mastered: VOCAB[l].categories[c].words.filter(w => isMastered(mastery, w.id)).map(w => w.id),
-          attempts: attempts[`${l}.${c}`] || 0,
-          bestScore: meta.best[`${l}.${c}`] || 0,
-        };
-      });
-      progress.sentences[l] = { mastered: sentenceIdsFor(l).filter(id => isMastered(mastery, id)) };
-    });
-  }
-
-  // Appends one immutable event, then recomputes the view. This replaces every
-  // `cat.words.indexOf(w)` write site — card identity is now the stable id.
-  function logEvent(id, mode, grade, category) {
-    recordEvent(events, {
-      cardId: id, lang: state.lang, category: category || state.category, mode, grade,
-    });
-    rebuildProgress();
-  }
-
-  async function loadProgress() {
-    events = loadEvents();
-    // One-shot: resolves old positional indices against the still-bundled seed
-    // deck, so every index maps to exactly the card it originally meant.
-    const report = runMigration(SEED_VOCAB, SENTENCES, CATEGORY_ORDER, events);
-    if (report.ran) {
-      if (report.meta) { meta = { ...meta, ...report.meta }; saveMeta(meta); }
-      console.info(`[shift-talk] migrated ${report.words} words, ${report.sentences} sentences`,
-        report.unresolved.length ? { unresolved: report.unresolved } : "");
-    }
-    rebuildProgress();
-    bumpStreak();
-    render();
-  }
-
-  function bumpStreak() {
-    const today = new Date().toDateString();
-    if (meta.lastVisit !== today) {
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      meta.streak = (meta.lastVisit === yesterday) ? meta.streak + 1 : 1;
-      meta.lastVisit = today;
-      saveMeta(meta);
-      rebuildProgress();
-    }
-  }
-
-  // ---------------- cross-device sync code (no backend required) ----------------
-  // Packs progress into a compact array (bitmask per category) so the code
-  // is short enough to render as a scannable QR code.
-  const SYNC_LANG_ORDER = ["zh", "ja", "ko"];
-
-  function packSyncData() {
-    const epochDay = meta.lastVisit ? Math.floor(new Date(meta.lastVisit).getTime() / 86400000) : null;
-    return { version: 2, streak: meta.streak || 0, epochDay, events: events.slice(-SYNC_EVENT_LIMIT) };
-  }
-
-  function generateSyncCode() {
-    return btoa(JSON.stringify(packSyncData()));
-  }
-
-  // Now ADDITIVE. The old version replaced the whole progress object, so
-  // scanning an older device's code destroyed newer progress. Incoming mastery
-  // becomes events instead, and the merge is a set union — importing the same
-  // code twice is a no-op, and neither device can lose work.
-  function applySyncCode(code) {
-    try {
-      const payload = JSON.parse(atob(code.trim()));
-      if (payload && payload.version === 2 && Array.isArray(payload.events)) {
-        events = mergeEvents(events, payload.events);
-        meta.streak = Math.max(meta.streak || 0, payload.streak || 0);
-        saveMeta(meta);
-        localStorage.setItem("shifttalk_events", JSON.stringify(events));
-        rebuildProgress();
-        return true;
-      }
-      const arr = payload;
-      if (!Array.isArray(arr) || arr[0] !== 1 || !Array.isArray(arr[3])) throw new Error("bad sync format");
-      const ts = (arr[2] != null) ? arr[2] * 86400000 : Date.now();
-      let i = 0;
-      SYNC_LANG_ORDER.forEach(l => {
-        CATEGORY_ORDER.forEach(c => {
-          const [bitmask, , bestScore] = arr[3][i++] || [0, 0, 0];
-          const words = SEED_VOCAB[l].categories[c].words;
-          for (let b = 0; b < 16; b++) {
-            if (!(bitmask & (1 << b)) || !words[b]) continue;
-            recordEvent(events, {
-              cardId: cardId(l, words[b].n), lang: l, category: c,
-              mode: "sync", grade: "correct", ts, source: "sync",
-            });
-          }
-          const key = `${l}.${c}`;
-          if ((bestScore || 0) > (meta.best[key] || 0)) meta.best[key] = bestScore;
-        });
-      });
-      (arr[4] || []).forEach((mask, li) => {
-        const l = SYNC_LANG_ORDER[li];
-        const ids = sentenceIdsFor(l);
-        for (let b = 0; b < 16; b++) {
-          if (!(mask & (1 << b)) || !ids[b]) continue;
-          recordEvent(events, {
-            cardId: ids[b], lang: l, category: "__sentence",
-            mode: "sync", grade: "correct", ts, source: "sync",
-          });
-        }
-      });
-      meta.streak = Math.max(meta.streak || 0, arr[1] || 0);
-      saveMeta(meta);
-      rebuildProgress();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  function totalMastered() {
-    let total = 0;
-    Object.keys(progress.langs).forEach(l => {
-      CATEGORY_ORDER.forEach(c => {
-        total += progress.langs[l][c].mastered.length;
-      });
-    });
-    return total;
-  }
-
-  function totalWords() {
-    let total = 0;
-    Object.keys(VOCAB).forEach(l => {
-      CATEGORY_ORDER.forEach(c => { total += VOCAB[l].categories[c].words.length; });
-    });
-    return total;
-  }
-
-  // ---------------- helpers ----------------
-  function shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  // ---------------- render ----------------
-  // ---------------- sentence builder view ----------------
-  function shuffleIndices(n) {
-    const idxs = Array.from({ length: n }, (_, i) => i);
-    return shuffle(idxs);
-  }
-
-  function ensureSentence() {
-    const list = SENTENCES[state.lang] || [];
-    if (!list.length) return;
-    if (!state.sentence) {
-      state.sentence = { idx: 0, placed: [], bankOrder: shuffleIndices(list[0].chunks.length), checked: false, correct: null };
-    }
-  }
-
-  function renderSentenceBuilder() {
-    const lang = VOCAB[state.lang];
-    const list = SENTENCES[state.lang] || [];
-
-    if (!list.length) {
-      app.innerHTML = `
-        <div class="st-lesson-top">
-          <div class="st-back" data-home="1">&larr; Floor</div>
-          <div class="st-lesson-title">Sentence Builder</div>
-        </div>
-        <div class="st-support-note" style="margin-top:20px;">Sentence practice for ${lang.name} isn't built yet — Chinese is live now, others are coming.</div>
-      `;
-      return;
-    }
-
-    ensureSentence();
-    const s = state.sentence;
-    const sent = list[s.idx];
-    const bankIdxs = s.bankOrder.filter(i => !s.placed.includes(i));
-
-    const placedHtml = s.placed.length
-      ? s.placed.map((chunkIdx, pos) => {
-          const ch = sent.chunks[chunkIdx];
-          return `<button class="st-chip" data-placed-idx="${pos}">${esc(ch.c)}<span class="st-chip-roman">${esc(ch.r)}</span></button>`;
-        }).join("")
-      : `<div class="st-build-empty">Tap words below to build the sentence…</div>`;
-
-    const bankHtml = bankIdxs.map(chunkIdx => {
-      const ch = sent.chunks[chunkIdx];
-      return `<button class="st-chip" data-bank-idx="${chunkIdx}">${esc(ch.c)}<span class="st-chip-roman">${esc(ch.r)}</span></button>`;
-    }).join("");
-
-    let resultHtml = "";
-    if (s.checked) {
-      const fullSentence = sent.chunks.map(c => c.c).join("") + "。";
-      const fullRoman = sent.chunks.map(c => c.r).join(" ");
-      resultHtml = `
-        <div class="st-sentence-result">
-          <div class="st-feedback ${s.correct ? 'correct' : 'incorrect'}" style="margin:0;">
-            <strong>${s.correct ? "Correct!" : "Not quite"}</strong>
-          </div>
-          <div class="st-sentence-correct-line">${esc(fullSentence)}</div>
-          <div class="st-sentence-correct-roman">${esc(fullRoman)}</div>
-        </div>
-      `;
-    }
-
-    const dots = list.map((_, i) => `<div class="st-dot ${i === s.idx ? 'on' : ''}"></div>`).join("");
-
-    app.innerHTML = `
-      <div class="st-lesson-top">
-        <div class="st-back" data-home="1">&larr; Floor</div>
-        <div class="st-lesson-title">Sentence Builder</div>
-      </div>
-      <div class="st-sentence-prompt">
-        <div class="st-sentence-label">Sentence ${s.idx + 1} of ${list.length} &middot; Build this in ${lang.name}</div>
-        <div class="st-sentence-en">${esc(sent.en)}</div>
-      </div>
-      <div class="st-build-area">${placedHtml}</div>
-      <div class="st-bank">${bankHtml}</div>
-      <div class="st-sentence-actions">
-        <button class="st-nav-btn" data-sentence-clear="1">Clear</button>
-        <button class="st-nav-btn" data-sentence-check="1" ${s.placed.length !== sent.chunks.length ? "disabled" : ""}>Check</button>
-      </div>
-      ${resultHtml}
-      <div class="st-card-nav">
-        <button class="st-nav-btn" data-sentence-prev="1" ${s.idx === 0 ? "disabled" : ""}>&larr; Prev</button>
-        <div class="st-dots">${dots}</div>
-        <button class="st-nav-btn" data-sentence-next="1" ${s.idx === list.length - 1 ? "disabled" : ""}>Next &rarr;</button>
-      </div>
-    `;
-  }
-
-  function render() {
-    if (state.view === "home") renderHome();
-    else if (state.view === "sentences") renderSentenceBuilder();
-    else renderLesson();
-    attachHandlers();
-  }
-
-  function renderSentencePlate(lang) {
-    const sentences = SENTENCES[state.lang] || [];
-    const sentProg = (progress.sentences && progress.sentences[state.lang]) || { mastered: [] };
-    if (!sentences.length) {
-      return `
-        <div class="st-plate st-plate-disabled">
-          <div class="st-plate-icon">句</div>
-          <div class="st-plate-title">Build ${lang.name} Sentences</div>
-          <div class="st-plate-meta">Coming soon for ${lang.name} — Chinese sentence practice is live now</div>
-        </div>`;
-    }
-    const pct = Math.round((sentProg.mastered.length / sentences.length) * 100);
-    return `
-      <div class="st-plate" data-sentences="1" style="--plate-color:${lang.color}">
-        <div class="st-plate-icon">句</div>
-        <div class="st-plate-title">Build ${lang.name} Sentences</div>
-        <div class="st-plate-bar-track"><div class="st-plate-bar-fill" style="width:${pct}%"></div></div>
-        <div class="st-plate-meta">${sentProg.mastered.length}/${sentences.length} SENTENCES BUILT &middot; USES YOUR VOCAB ABOVE</div>
-      </div>`;
-  }
-
-  function renderHome() {
-    const lang = VOCAB[state.lang];
-    const mastered = totalMastered();
-    const words = totalWords();
-
-    let zonesHtml = Object.keys(VOCAB).map(code => {
-      const l = VOCAB[code];
-      const active = code === state.lang ? "active" : "";
-      return `
-        <div class="st-zone ${active}" style="--zone-color:${l.color}" data-zone="${code}">
-          <div class="st-zone-chip">${l.code}</div>
-          <div class="st-zone-name">${l.name}</div>
-          <div class="st-zone-native">${l.native}</div>
-        </div>`;
-    }).join("");
-
-    let platesHtml = CATEGORY_ORDER.map(cid => {
-      const cat = lang.categories[cid];
-      const prog = progress.langs[state.lang][cid];
-      const pct = Math.round((prog.mastered.length / cat.words.length) * 100);
-      return `
-        <div class="st-plate" data-cat="${cid}" style="--plate-color:${lang.color}">
-          <div class="st-plate-icon">${cat.icon}</div>
-          <div class="st-plate-title">${cat.label}</div>
-          <div class="st-plate-bar-track"><div class="st-plate-bar-fill" style="width:${pct}%"></div></div>
-          <div class="st-plate-meta">${prog.mastered.length}/${cat.words.length} MASTERED &middot; BEST ${prog.bestScore}/${cat.words.length}</div>
-        </div>`;
-    }).join("");
-
-    app.innerHTML = `
-      <div class="st-header" style="padding:0 0 4px;">
-        <div class="st-eyebrow">EPZ &middot; Kitengela Line</div>
-        <div class="st-title">Shift Talk</div>
-        <div class="st-subtitle">Factory-floor ${lang.name} for the production line, not the tourist trail.</div>
-      </div>
-
-      <div class="st-punch">
-        <div class="st-punch-cell">
-          <div class="st-punch-label">Streak</div>
-          <div class="st-punch-value">${progress.streak}d</div>
-        </div>
-        <div class="st-punch-cell">
-          <div class="st-punch-label">Words Mastered</div>
-          <div class="st-punch-value">${mastered}/${words}</div>
-        </div>
-        <div class="st-punch-cell">
-          <div class="st-punch-label">Zone</div>
-          <div class="st-punch-value">${lang.code}</div>
-        </div>
-      </div>
-
-      <div class="st-section-label">Select Language Zone</div>
-      <div class="st-zones">${zonesHtml}</div>
-
-      <div class="st-section-label">${lang.name} &mdash; Lesson Plates</div>
-      <div class="st-plates">${platesHtml}</div>
-
-      <div class="st-section-label">Sentence Practice</div>
-      ${renderSentencePlate(lang)}
-
-      <details class="st-sync" ${state.syncPanelOpen ? "open" : ""}>
-        <summary>Sync Progress Across Devices</summary>
-        <div class="st-sync-body">
-          <p>No account, no server — scan a QR code between your two phones, or use a text code as backup.</p>
-          <div class="st-sync-row" style="display:flex; gap:8px;">
-            <button class="st-nav-btn" data-sync-qr="1" style="flex:1;">Show My QR Code</button>
-            <button class="st-nav-btn" data-sync-scan="1" style="flex:1;">Scan a Code</button>
-          </div>
-          ${state.syncShowQr ? `<div id="stQrOut" class="st-qr-wrap"></div>` : ""}
-
-          <details class="st-sync-fallback">
-            <summary>Or use a text code instead</summary>
-            <div style="margin-top:10px;">
-              <textarea id="stSyncOut" class="st-sync-textarea" rows="3" readonly placeholder="Tap 'Show My QR Code' above, or generate one here…">${state.syncOutCode ? esc(state.syncOutCode) : ""}</textarea>
-              <button class="st-nav-btn" data-sync-copy="1" style="margin-top:6px;">Copy Code</button>
-              <div class="st-sync-divider">Paste a code from another device:</div>
-              <textarea id="stSyncIn" class="st-sync-textarea" rows="3" placeholder="Paste sync code…"></textarea>
-              <button class="st-nav-btn" data-sync-apply="1" style="margin-top:6px;">Apply Code</button>
-            </div>
-          </details>
-          <div id="stSyncMsg" class="st-sync-msg ${state.syncMsg ? (state.syncMsg.ok ? 'ok' : 'err') : ''}">${state.syncMsg ? esc(state.syncMsg.text) : ""}</div>
-        </div>
-      </details>
-    `;
-  }
-
-  function renderLesson() {
-    const lang = VOCAB[state.lang];
-    const cat = lang.categories[state.category];
-
-    let body = "";
-    if (state.mode === "learn") {
-      const idx = state.cardIndex;
-      const w = cat.words[idx];
-      const dots = cat.words.map((_, i) => `<div class="st-dot ${i === idx ? 'on' : ''}"></div>`).join("");
-      body = `
-        <div class="st-card-wrap">
-          <div class="st-card" data-flip="1" data-tag="${lang.code} &middot; ${idx + 1}/${cat.words.length}">
-            <div class="st-card-native">${esc(w.n)}</div>
-            <div class="st-card-roman">${esc(w.r)}</div>
-            ${state.flipped ? `<div class="st-card-english">${esc(w.e)}</div>` : `<div class="st-card-hint">Tap card to reveal meaning</div>`}
-            <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
-          </div>
-        </div>
-        <div class="st-card-nav">
-          <button class="st-nav-btn" data-prev="1" ${idx === 0 ? "disabled" : ""}>&larr; Prev</button>
-          <div class="st-dots">${dots}</div>
-          <button class="st-nav-btn" data-next="1" ${idx === cat.words.length - 1 ? "disabled" : ""}>Next &rarr;</button>
-        </div>
-        <div class="st-voice-note">Tap the speaker for native pronunciation &middot; auto-plays on new cards</div>
-      `;
-    } else if (state.mode === "quiz") {
-      body = renderQuiz(lang, cat);
-    } else if (state.mode === "speak") {
-      body = renderSpeak(lang, cat);
-    } else if (state.mode === "listen") {
-      body = renderListen(lang, cat);
-    }
-
-    app.innerHTML = `
-      <div class="st-lesson-top">
-        <div class="st-back" data-home="1">&larr; Floor</div>
-        <div class="st-lesson-title">${cat.label}</div>
-      </div>
-      <div class="st-mode-toggle">
-        <div class="st-mode-btn ${state.mode === 'learn' ? 'active' : ''}" data-mode="learn">Learn</div>
-        <div class="st-mode-btn ${state.mode === 'quiz' ? 'active' : ''}" data-mode="quiz">Quiz</div>
-        <div class="st-mode-btn ${state.mode === 'speak' ? 'active' : ''}" data-mode="speak">Speak</div>
-        <div class="st-mode-btn ${state.mode === 'listen' ? 'active' : ''}" data-mode="listen">Listen</div>
-      </div>
-      ${body}
-    `;
-  }
-
-  // ---------------- speak mode (repeat-after-me pronunciation practice) ----------------
-  function ensureSpeak() {
-    if (state.speak) return;
-    state.speak = { idx: 0, phase: "ready", result: null, revealed: false };
-  }
-
-  function renderSpeak(lang, cat) {
-    ensureSpeak();
-    const s = state.speak;
-    const w = cat.words[s.idx];
-    const bcp47 = TTS_LANG[state.lang];
-
-    let feedbackHtml = "";
-    if (s.result) {
-      const r = s.result;
-      const cls = r.grade === "correct" ? "correct" : r.grade === "close" ? "close" : "incorrect";
-      const label = r.grade === "correct" ? "Nailed it" : r.grade === "close" ? "Close — small gap" : "Not quite — try again";
-      feedbackHtml = `
-        <div class="st-feedback ${cls}">
-          <strong>${label}</strong>
-          <div class="st-feedback-sub">You said: ${esc(r.recognized || "(nothing recognized)")}</div>
-        </div>`;
-    }
-
-    let micHtml;
-    if (!sttSupported) {
-      micHtml = `<div class="st-support-note">Speech recognition isn't supported in this browser.<br>Try Chrome on Android, then repeat the word aloud and self-check against the meaning below.</div>
-        ${!s.revealed ? `<button class="st-nav-btn" data-reveal-speak="1" style="margin-top:10px;">Show Meaning</button>` : `<div class="st-card-english" style="border:none;padding-top:10px;">${esc(w.e)}</div>`}`;
-    } else {
-      const listening = s.phase === "listening";
-      micHtml = `
-        <button class="st-mic-btn ${listening ? 'listening' : ''}" data-mic="1" ${listening ? "disabled" : ""}>&#127908;</button>
-        <div class="st-mic-label">${listening ? "Listening…" : "Tap and say it"}</div>
-        ${feedbackHtml}
-      `;
-    }
-
-    const dots = cat.words.map((_, i) => `<div class="st-dot ${i === s.idx ? 'on' : ''}"></div>`).join("");
-
-    return `
-      <div class="st-practice-card" data-tag="${lang.code} &middot; ${s.idx + 1}/${cat.words.length}">
-        <div class="st-card-native">${esc(w.n)}</div>
-        <div class="st-card-roman">${esc(w.r)}</div>
-        ${micHtml}
-        <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
-      </div>
-      <div class="st-practice-nav">
-        <button class="st-nav-btn" data-speak-prev="1" ${s.idx === 0 ? "disabled" : ""}>&larr; Prev</button>
-        <div class="st-dots">${dots}</div>
-        <button class="st-nav-btn" data-speak-next="1" ${s.idx === cat.words.length - 1 ? "disabled" : ""}>Next &rarr;</button>
-      </div>
-      <div class="st-voice-note">Listen, then repeat the word out loud into your mic</div>
-    `;
-  }
-
-  // ---------------- listen mode (audio-first comprehension) ----------------
-  function ensureListen() {
-    if (state.listen) return;
-    state.listen = { idx: 0, phase: "ready", result: null };
-  }
-
-  function renderListen(lang, cat) {
-    ensureListen();
-    const s = state.listen;
-    const w = cat.words[s.idx];
-
-    let body;
-    if (s.phase !== "revealed") {
-      const listening = s.phase === "listening";
-      let feedbackHtml = "";
-      if (s.result) {
-        const cls = s.result.grade === "correct" ? "correct" : s.result.grade === "close" ? "close" : "incorrect";
-        const label = s.result.grade === "correct" ? "Correct" : s.result.grade === "close" ? "Close — check the full meaning" : "Not quite";
-        feedbackHtml = `<div class="st-feedback ${cls}"><strong>${label}</strong>${s.result.userText ? `<div class="st-feedback-sub">You said: ${esc(s.result.userText)}</div>` : ""}</div>`;
-      }
-      const micRow = sttSupported ? `
-        <button class="st-mic-btn ${listening ? 'listening' : ''}" data-listen-mic="1" ${listening ? "disabled" : ""}>&#127908;</button>
-        <div class="st-mic-label">${listening ? "Listening…" : "Tap and say the meaning in English"}</div>
-      ` : "";
-      body = `
-        <div class="st-practice-card" data-tag="${lang.code} &middot; ${s.idx + 1}/${cat.words.length}">
-          <div class="st-listen-mystery">? ? ?</div>
-          <button class="st-speak-btn" style="position:static; display:inline-flex; margin-top:6px;" data-speak="${esc(w.n)}" title="Play audio">&#128266; Replay</button>
-          ${micRow}
-          <div class="st-text-fallback">
-            <input type="text" id="stListenInput" placeholder="Or type what it means…">
-            <button data-listen-submit="1">Check</button>
-          </div>
-          ${feedbackHtml}
-          <div class="st-support-note" style="margin-top:10px;"><span data-listen-reveal="1" style="text-decoration:underline; cursor:pointer;">Show answer</span></div>
-        </div>
-      `;
-    } else {
-      body = `
-        <div class="st-practice-card st-listen-reveal" data-tag="${lang.code} &middot; ${s.idx + 1}/${cat.words.length}">
-          <div class="st-card-native">${esc(w.n)}</div>
-          <div class="st-card-roman">${esc(w.r)}</div>
-          <div class="st-card-english">${esc(w.e)}</div>
-          <button class="st-speak-btn" data-speak="${esc(w.n)}" title="Play pronunciation">&#128266;</button>
-        </div>
-      `;
-    }
-
-    const dots = cat.words.map((_, i) => `<div class="st-dot ${i === s.idx ? 'on' : ''}"></div>`).join("");
-    return `
-      ${body}
-      <div class="st-practice-nav">
-        <button class="st-nav-btn" data-listen-prev="1" ${s.idx === 0 ? "disabled" : ""}>&larr; Prev</button>
-        <div class="st-dots">${dots}</div>
-        <button class="st-nav-btn" data-listen-next="1" ${s.idx === cat.words.length - 1 ? "disabled" : ""}>Next &rarr;</button>
-      </div>
-      <div class="st-voice-note">Listen first, then say or type what it means &middot; text stays hidden until you answer</div>
-    `;
-  }
-
-  function ensureQuiz(cat) {
-    if (state.quiz) return;
-    const questions = shuffle(cat.words).map(w => {
-      const distractors = shuffle(cat.words.filter(x => x !== w)).slice(0, 3).map(x => x.e);
-      const options = shuffle([w.e, ...distractors]);
-      return { word: w, options, answered: false, picked: null };
-    });
-    state.quiz = { qIndex: 0, questions, score: 0, done: false };
-  }
-
-  function renderQuiz(lang, cat) {
-    ensureQuiz(cat);
-    const q = state.quiz;
-
-    if (q.done) {
-      const total = q.questions.length;
-      return `
-        <div class="st-quiz-result">
-          <div class="st-quiz-result-score">${q.score}/${total}</div>
-          <div class="st-quiz-result-label">Correct on this shift</div>
-          <button class="st-quiz-result-btn" data-retry="1">Run It Again</button>
-          <button class="st-quiz-result-btn secondary" data-home="1">Back to Floor</button>
-        </div>
-      `;
-    }
-
-    const current = q.questions[q.qIndex];
-    const optionsHtml = current.options.map(opt => {
-      let cls = "st-option";
-      if (current.answered) {
-        cls += " disabled";
-        if (opt === current.word.e) cls += " correct";
-        else if (opt === current.picked) cls += " incorrect";
-      }
-      return `<button class="${cls}" data-opt="${esc(opt)}">${esc(opt)}</button>`;
-    }).join("");
-
-    return `
-      <div class="st-quiz-progress">Question ${q.qIndex + 1} of ${q.questions.length} &middot; Score ${q.score}</div>
-      <div class="st-quiz-prompt">
-        <div class="st-quiz-native-row">
-          <div class="st-quiz-native">${esc(current.word.n)}</div>
-          <button class="st-speak-btn inline" data-speak="${esc(current.word.n)}" title="Play pronunciation">&#128266;</button>
-        </div>
-        <div class="st-quiz-roman">${esc(current.word.r)}</div>
-        <div class="st-quiz-instruction">What does this mean?</div>
-      </div>
-      <div class="st-options">${optionsHtml}</div>
-    `;
-  }
-
-  // ---------------- event handling ----------------
-  function stopActiveRecognition() {
-    if (activeRecognition) {
-      try { activeRecognition.abort(); } catch (e) {}
-      activeRecognition = null;
-    }
-  }
-
-  function micErrorNote(err) {
-    if (err === "not-allowed" || err === "service-not-allowed") return "Microphone access was blocked — allow it in your browser's site settings.";
-    if (err === "no-speech") return "Didn't catch anything — try again a bit closer to the mic.";
-    if (err === "unsupported") return "Speech recognition isn't available on this device/browser.";
-    return "Couldn't process that — try again.";
-  }
-
-  function attachHandlers() {
-    app.querySelectorAll('[data-zone]').forEach(el => {
-      el.onclick = () => { state.lang = el.dataset.zone; render(); };
-    });
-    app.querySelectorAll('[data-cat]').forEach(el => {
-      el.onclick = () => {
-        stopActiveRecognition();
-        state.view = "lesson";
-        state.category = el.dataset.cat;
-        state.mode = "learn";
-        state.cardIndex = 0;
-        state.flipped = false;
-        state.quiz = null;
-        state.speak = null;
-        state.listen = null;
-        state.lastSpokenKey = null;
-        render();
-      };
-    });
-    const sentencesPlate = app.querySelector('[data-sentences]');
-    if (sentencesPlate) sentencesPlate.onclick = () => {
-      stopActiveRecognition();
-      state.view = "sentences";
-      state.sentence = null;
-      render();
-    };
-    app.querySelectorAll('[data-home]').forEach(el => {
-      el.onclick = () => {
-        stopActiveRecognition();
-        state.view = "home";
-        state.quiz = null;
-        state.speak = null;
-        state.listen = null;
-        state.sentence = null;
-        render();
-      };
-    });
-    app.querySelectorAll('[data-mode]').forEach(el => {
-      el.onclick = () => {
-        stopActiveRecognition();
-        state.mode = el.dataset.mode;
-        if (state.mode === "quiz") state.quiz = null;
-        if (state.mode === "speak") state.speak = null;
-        if (state.mode === "listen") state.listen = null;
-        state.lastSpokenKey = null;
-        render();
-      };
-    });
-    const card = app.querySelector('[data-flip]');
-    if (card) card.onclick = () => { state.flipped = !state.flipped; render(); };
-
-    const prevBtn = app.querySelector('[data-prev]');
-    if (prevBtn) prevBtn.onclick = () => {
-      if (state.cardIndex > 0) { state.cardIndex--; state.flipped = false; render(); }
-    };
-    const nextBtn = app.querySelector('[data-next]');
-    if (nextBtn) nextBtn.onclick = () => {
-      const cat = VOCAB[state.lang].categories[state.category];
-      if (state.cardIndex < cat.words.length - 1) { state.cardIndex++; state.flipped = false; render(); }
-    };
-
-    app.querySelectorAll('[data-opt]').forEach(el => {
-      el.onclick = () => handleQuizAnswer(el.dataset.opt);
-    });
-    const retryBtn = app.querySelector('[data-retry]');
-    if (retryBtn) retryBtn.onclick = () => { state.quiz = null; render(); };
-
-    app.querySelectorAll('[data-speak]').forEach(el => {
-      el.onclick = (ev) => {
-        ev.stopPropagation();
-        speak(el.dataset.speak, state.lang, el);
-      };
-    });
-
-    // ---- Speak mode ----
-    const micBtn = app.querySelector('[data-mic]');
-    if (micBtn) micBtn.onclick = () => {
-      const cat = VOCAB[state.lang].categories[state.category];
-      const w = cat.words[state.speak.idx];
-      state.speak.phase = "listening";
-      state.speak.result = null;
-      render();
-      activeRecognition = runRecognition(
-        TTS_LANG[state.lang],
-        (text) => {
-          activeRecognition = null;
-          const graded = gradeNativeAttempt(w.n, text);
-          state.speak.phase = "ready";
-          state.speak.result = graded;
-          // Every grade is logged, including incorrect — lapses drive the
-          // scheduler and tell the generator what to reinforce.
-          logEvent(w.id, "speak", graded.grade);
-          render();
-        },
-        (err) => {
-          activeRecognition = null;
-          state.speak.phase = "ready";
-          state.speak.result = { grade: "incorrect", recognized: micErrorNote(err) };
-          render();
-        }
-      );
-    };
-    const revealSpeakBtn = app.querySelector('[data-reveal-speak]');
-    if (revealSpeakBtn) revealSpeakBtn.onclick = () => { state.speak.revealed = true; render(); };
-    const speakPrev = app.querySelector('[data-speak-prev]');
-    if (speakPrev) speakPrev.onclick = () => {
-      stopActiveRecognition();
-      if (state.speak.idx > 0) { state.speak.idx--; state.speak.phase = "ready"; state.speak.result = null; state.speak.revealed = false; render(); }
-    };
-    const speakNext = app.querySelector('[data-speak-next]');
-    if (speakNext) speakNext.onclick = () => {
-      stopActiveRecognition();
-      const cat = VOCAB[state.lang].categories[state.category];
-      if (state.speak.idx < cat.words.length - 1) { state.speak.idx++; state.speak.phase = "ready"; state.speak.result = null; state.speak.revealed = false; render(); }
-    };
-
-    // ---- Listen mode ----
-    function gradeListenAnswer(userText) {
-      const cat = VOCAB[state.lang].categories[state.category];
-      const w = cat.words[state.listen.idx];
-      const graded = gradeEnglishAttempt(w.e, userText);
-      state.listen.result = { grade: graded.grade, userText };
-      state.listen.phase = graded.grade === "correct" ? "revealed" : "ready";
-      logEvent(w.id, "listen", graded.grade);
-      render();
-    }
-    const listenMic = app.querySelector('[data-listen-mic]');
-    if (listenMic) listenMic.onclick = () => {
-      state.listen.phase = "listening";
-      render();
-      activeRecognition = runRecognition(
-        "en-US",
-        (text) => { activeRecognition = null; gradeListenAnswer(text); },
-        (err) => {
-          activeRecognition = null;
-          state.listen.phase = "ready";
-          state.listen.result = { grade: "incorrect", userText: micErrorNote(err) };
-          render();
-        }
-      );
-    };
-    const listenSubmit = app.querySelector('[data-listen-submit]');
-    if (listenSubmit) listenSubmit.onclick = () => {
-      const input = app.querySelector('#stListenInput');
-      const val = input ? input.value.trim() : "";
-      if (!val) return;
-      gradeListenAnswer(val);
-    };
-    const listenInput = app.querySelector('#stListenInput');
-    if (listenInput) listenInput.onkeydown = (ev) => {
-      if (ev.key === "Enter") { ev.preventDefault(); app.querySelector('[data-listen-submit]').click(); }
-    };
-    const listenReveal = app.querySelector('[data-listen-reveal]');
-    if (listenReveal) listenReveal.onclick = () => { state.listen.phase = "revealed"; render(); };
-    const listenPrev = app.querySelector('[data-listen-prev]');
-    if (listenPrev) listenPrev.onclick = () => {
-      stopActiveRecognition();
-      if (state.listen.idx > 0) { state.listen.idx--; state.listen.phase = "ready"; state.listen.result = null; state.lastSpokenKey = null; render(); }
-    };
-    const listenNext = app.querySelector('[data-listen-next]');
-    if (listenNext) listenNext.onclick = () => {
-      stopActiveRecognition();
-      const cat = VOCAB[state.lang].categories[state.category];
-      if (state.listen.idx < cat.words.length - 1) { state.listen.idx++; state.listen.phase = "ready"; state.listen.result = null; state.lastSpokenKey = null; render(); }
-    };
-
-    // ---- Sentence builder ----
-    function goToSentence(newIdx) {
-      const list = SENTENCES[state.lang] || [];
-      const sent = list[newIdx];
-      state.sentence = { idx: newIdx, placed: [], bankOrder: shuffleIndices(sent.chunks.length), checked: false, correct: null };
-      render();
-    }
-    app.querySelectorAll('[data-bank-idx]').forEach(el => {
-      el.onclick = () => {
-        if (state.sentence.checked) return;
-        state.sentence.placed.push(parseInt(el.dataset.bankIdx, 10));
-        render();
-      };
-    });
-    app.querySelectorAll('[data-placed-idx]').forEach(el => {
-      el.onclick = () => {
-        if (state.sentence.checked) return;
-        const pos = parseInt(el.dataset.placedIdx, 10);
-        state.sentence.placed.splice(pos, 1);
-        render();
-      };
-    });
-    const sentClear = app.querySelector('[data-sentence-clear]');
-    if (sentClear) sentClear.onclick = () => {
-      state.sentence.placed = [];
-      state.sentence.checked = false;
-      state.sentence.correct = null;
-      render();
-    };
-    const sentCheck = app.querySelector('[data-sentence-check]');
-    if (sentCheck) sentCheck.onclick = () => {
-      const list = SENTENCES[state.lang] || [];
-      const sent = list[state.sentence.idx];
-      const correct = state.sentence.placed.length === sent.chunks.length &&
-        state.sentence.placed.every((v, i) => v === i);
-      state.sentence.checked = true;
-      state.sentence.correct = correct;
-      logEvent(sentenceId(state.lang, sent), "sentence", correct ? "correct" : "incorrect", "__sentence");
-      render();
-      const fullSentence = sent.chunks.map(c => c.c).join("");
-      speak(fullSentence, state.lang, null);
-    };
-    const sentPrev = app.querySelector('[data-sentence-prev]');
-    if (sentPrev) sentPrev.onclick = () => { if (state.sentence.idx > 0) goToSentence(state.sentence.idx - 1); };
-    const sentNext = app.querySelector('[data-sentence-next]');
-    if (sentNext) sentNext.onclick = () => {
-      const list = SENTENCES[state.lang] || [];
-      if (state.sentence.idx < list.length - 1) goToSentence(state.sentence.idx + 1);
-    };
-
-    maybeAutoSpeak();
-
-    // ---- Sync panel (home screen only) ----
-    const syncQrBtn = app.querySelector('[data-sync-qr]');
-    if (syncQrBtn) syncQrBtn.onclick = () => {
-      const code = generateSyncCode();
-      state.syncOutCode = code;
-      state.syncShowQr = true;
-      state.syncPanelOpen = true;
-      render();
-    };
-    const syncScanBtn = app.querySelector('[data-sync-scan]');
-    if (syncScanBtn) syncScanBtn.onclick = () => {
-      state.syncPanelOpen = true;
-      startQrScan();
-    };
-    const syncCopyBtn = app.querySelector('[data-sync-copy]');
-    if (syncCopyBtn) syncCopyBtn.onclick = async () => {
-      const out = app.querySelector('#stSyncOut');
-      if (out && !out.value) { out.value = generateSyncCode(); state.syncOutCode = out.value; }
-      state.syncPanelOpen = true;
-      try {
-        await navigator.clipboard.writeText(out.value);
-        syncCopyBtn.textContent = "Copied!";
-        setTimeout(() => { syncCopyBtn.textContent = "Copy Code"; }, 1500);
-      } catch (e) {
-        out.select();
-      }
-    };
-    const syncApplyBtn = app.querySelector('[data-sync-apply]');
-    if (syncApplyBtn) syncApplyBtn.onclick = () => {
-      const input = app.querySelector('#stSyncIn');
-      const code = input ? input.value.trim() : "";
-      if (!code) return;
-      const ok = applySyncCode(code);
-      state.syncPanelOpen = true;
-      state.syncMsg = {
-        text: ok ? "Progress loaded from code." : "That code didn't look right — check you copied the whole thing.",
-        ok
-      };
-      render();
-    };
-
-    // Render the QR image into the panel now that its container exists in the DOM
-    if (state.syncShowQr && state.syncOutCode) {
-      const qrEl = app.querySelector('#stQrOut');
-      if (qrEl && window.QRCode) {
-        qrEl.innerHTML = "";
-        new QRCode(qrEl, {
-          text: state.syncOutCode,
-          width: 220,
-          height: 220,
-          colorDark: "#14161a",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.M
-        });
-      } else if (qrEl) {
-        qrEl.innerHTML = `<div style="color:#14161a; font-family:var(--font-mono); font-size:11px; padding:20px; text-align:center;">QR library didn't load — use the text code below instead.</div>`;
-      }
-    }
-  }
-
-  // ---------------- QR camera scan ----------------
-  function startQrScan() {
-    if (!window.jsQR) {
-      state.syncMsg = { text: "QR scanning library didn't load — use the text code fallback instead.", ok: false };
-      render();
-      return;
-    }
-    const overlay = document.createElement('div');
-    overlay.className = 'st-scan-overlay';
-    overlay.innerHTML = `
-      <video class="st-scan-video" autoplay playsinline muted></video>
-      <div class="st-scan-status" id="stScanStatus">Point your camera at the other phone's QR code…</div>
-      <button class="st-scan-cancel" id="stScanCancel">Cancel</button>
-    `;
-    document.body.appendChild(overlay);
-    const video = overlay.querySelector('video');
-    const statusEl = overlay.querySelector('#stScanStatus');
-    let stream = null;
-    let stopped = false;
-
-    function cleanup() {
-      stopped = true;
-      if (stream) { stream.getTracks().forEach(t => t.stop()); }
-      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-    }
-    overlay.querySelector('#stScanCancel').onclick = cleanup;
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(s => {
-        stream = s;
-        video.srcObject = s;
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        function tick() {
-          if (stopped) return;
-          if (video.readyState === video.HAVE_ENOUGH_DATA) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const found = jsQR(imageData.data, imageData.width, imageData.height);
-            if (found && found.data) {
-              const ok = applySyncCode(found.data);
-              statusEl.textContent = ok ? "Got it! Loading progress…" : "Scanned something, but it wasn't a valid Shift Talk code.";
-              if (ok) {
-                setTimeout(() => {
-                  cleanup();
-                  state.syncPanelOpen = true;
-                  state.syncMsg = { text: "Progress loaded from QR scan.", ok: true };
-                  render();
-                }, 500);
-                return;
-              }
-            }
-          }
-          requestAnimationFrame(tick);
-        }
-        requestAnimationFrame(tick);
-      })
-      .catch(err => {
-        statusEl.textContent = "Couldn't access the camera (" + (err && err.name ? err.name : "permission denied") + "). Cancel and use the text code fallback instead.";
-      });
-  }
-
-
-  function maybeAutoSpeak() {
-    if (state.view !== "lesson") return;
-    const cat = VOCAB[state.lang].categories[state.category];
-    let key = null, text = null;
-    if (state.mode === "learn") {
-      key = "learn:" + state.lang + ":" + state.category + ":" + state.cardIndex;
-      text = cat.words[state.cardIndex].n;
-    } else if (state.mode === "quiz" && state.quiz && !state.quiz.done) {
-      const q = state.quiz;
-      key = "quiz:" + state.lang + ":" + state.category + ":" + q.qIndex;
-      text = q.questions[q.qIndex].word.n;
-    } else if (state.mode === "speak" && state.speak) {
-      key = "speak:" + state.lang + ":" + state.category + ":" + state.speak.idx;
-      text = cat.words[state.speak.idx].n;
-    } else if (state.mode === "listen" && state.listen && state.listen.phase !== "revealed") {
-      key = "listen:" + state.lang + ":" + state.category + ":" + state.listen.idx;
-      text = cat.words[state.listen.idx].n;
-    }
-    if (key && key !== state.lastSpokenKey) {
-      state.lastSpokenKey = key;
-      const btn = app.querySelector('[data-speak]');
-      speak(text, state.lang, btn);
-    }
-  }
-
-  function handleQuizAnswer(picked) {
-    const q = state.quiz;
-    const current = q.questions[q.qIndex];
-    if (current.answered) return;
-    current.answered = true;
-    current.picked = picked;
-    const correct = picked === current.word.e;
-    if (correct) q.score++;
-
-    logEvent(current.word.id, "quiz", correct ? "correct" : "incorrect");
-
-    render();
-
-    setTimeout(() => {
-      if (q.qIndex < q.questions.length - 1) {
-        q.qIndex++;
-      } else {
-        q.done = true;
-        // Best score is per-category display state, not a per-card fact, so it
-        // can't be folded out of the log — it lives in the meta blob.
-        const key = `${state.lang}.${state.category}`;
-        if (q.score > (meta.best[key] || 0)) {
-          meta.best[key] = q.score;
-          saveMeta(meta);
-          rebuildProgress();
-        }
-      }
-      render();
-    }, 850);
-  }
-
-  loadProgress();
-
-  // Firebase is additive. A missing config, offline network, or failed sync
-  // never delays the local render or prevents practice.
-  syncWithFirebase(events).then(result => {
-    if (result.events.length !== events.length) {
-      events = mergeEvents(events, result.events);
-      localStorage.setItem("shifttalk_events", JSON.stringify(events));
-      rebuildProgress();
-      render();
-    }
-  }).catch(() => {});
-
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {
-        // Registration fails silently if the file isn't served from a
-        // proper https/localhost origin (e.g. opened as a local download).
-      });
-    });
-  }
-})();
-</script>
-
+  <script src="data.js"></script>
+  <script src="grammar.js"></script>
+  <script src="listening.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
