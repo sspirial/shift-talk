@@ -2418,3 +2418,162 @@ body {
   .audio-play-btn { width: 60px; height: 60px; }
   .audio-play-btn svg { width: 22px; height: 22px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AUDIO / SPEAKABLE CARDS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Any card with data-speak shows a pointer cursor */
+.speakable { cursor: pointer; }
+
+/* The 🔊 icon shown on every speakable card */
+.speak-icon {
+  font-size: 0.9rem;
+  opacity: 0.3;
+  transition: opacity 0.15s, transform 0.15s;
+  user-select: none;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.speak-icon.small { font-size: 0.72rem; }
+
+/* Reveal icon on hover */
+.speakable:hover .speak-icon { opacity: 1; transform: scale(1.2); }
+
+/* Active pulse when speaking */
+.speakable.speaking .speak-icon {
+  opacity: 1;
+  animation: speak-pulse 0.5s ease-in-out infinite alternate;
+}
+@keyframes speak-pulse {
+  from { transform: scale(1); }
+  to   { transform: scale(1.4); }
+}
+
+/* ── Vocabulary card top row ─────────────────────────────────────────────── */
+.word-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.55rem;
+}
+
+/* Make pinyin more prominent on vocabulary cards */
+.word-pinyin {
+  font-size: 0.9rem;
+  color: rgba(185,170,255,0.9);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.3rem;
+}
+
+/* Highlight border on hover to reinforce "click me" affordance */
+.word-card:hover {
+  border-color: rgba(124,106,255,0.4);
+  box-shadow: 0 8px 28px rgba(124,106,255,0.15), 0 0 0 1px rgba(124,106,255,0.12);
+}
+
+/* ── Flashcard speak button ──────────────────────────────────────────────── */
+.fc-speak-btn {
+  background: rgba(124,106,255,0.14);
+  border: 1px solid rgba(124,106,255,0.32);
+  border-radius: 100px;
+  color: rgba(185,170,255,0.9);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.4rem 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-top: 0.6rem;
+  letter-spacing: 0.01em;
+}
+.fc-speak-btn:hover {
+  background: rgba(124,106,255,0.28);
+  transform: scale(1.04);
+  box-shadow: 0 4px 18px rgba(124,106,255,0.3);
+}
+.fc-speak-btn:active { transform: scale(0.97); }
+
+/* ── Modal head row: Chinese + speak button ──────────────────────────────── */
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.modal-speak-btn {
+  background: rgba(124,106,255,0.14);
+  border: 1px solid rgba(124,106,255,0.32);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+.modal-speak-btn:hover {
+  background: rgba(124,106,255,0.3);
+  transform: scale(1.1);
+  box-shadow: 0 4px 18px rgba(124,106,255,0.35);
+}
+.modal-speak-btn:active { transform: scale(0.92); }
+
+/* ── Grammar example card head ───────────────────────────────────────────── */
+.example-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.example-card-head .example-cn { flex: 1; }
+
+.example-card.speakable:hover {
+  border-color: rgba(124,106,255,0.35);
+  box-shadow: 0 4px 18px rgba(124,106,255,0.1);
+}
+
+/* ── Grammar keyword card cn row ─────────────────────────────────────────── */
+.keyword-cn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0.15rem;
+}
+
+.keyword-card.speakable:hover {
+  border-color: rgba(124,106,255,0.35);
+}
+
+/* ── Phrasebook top row: Chinese + speak icon ────────────────────────────── */
+.phrase-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.phrase-top .phrase-cn { flex: 1; }
+
+.phrase-item.speakable { cursor: pointer; }
+.phrase-item.speakable:hover {
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--radius-sm);
+}
+
+/* Improve pinyin visibility globally across all cards */
+.example-py,
+.keyword-py,
+.phrase-pinyin,
+.fc-pinyin {
+  opacity: 1;
+  color: rgba(180,165,255,0.88);
+}

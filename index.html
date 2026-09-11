@@ -160,7 +160,8 @@
               <div class="fc-category-label" id="fc-cat-label"></div>
               <div class="fc-chinese" id="fc-chinese"></div>
               <div class="fc-pinyin" id="fc-pinyin"></div>
-              <div class="fc-hint">Tap to reveal English</div>
+              <button class="fc-speak-btn" id="fc-speak-btn" aria-label="Hear pronunciation">🔊 Hear pronunciation</button>
+              <div class="fc-hint">Tap card to flip</div>
             </div>
             <div class="flashcard-back">
               <div class="fc-english" id="fc-english"></div>
@@ -366,8 +367,13 @@
   <div class="modal-overlay" id="modal-overlay" aria-modal="true" role="dialog">
     <div class="modal" id="word-modal">
       <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
-      <div class="modal-chinese" id="modal-chinese"></div>
-      <div class="modal-pinyin" id="modal-pinyin"></div>
+      <div class="modal-head">
+        <div>
+          <div class="modal-chinese" id="modal-chinese"></div>
+          <div class="modal-pinyin" id="modal-pinyin"></div>
+        </div>
+        <button class="modal-speak-btn" id="modal-speak" aria-label="Hear pronunciation">🔊</button>
+      </div>
       <div class="modal-english" id="modal-english"></div>
       <div class="modal-category" id="modal-category"></div>
       <div class="modal-divider"></div>

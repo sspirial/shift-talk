@@ -190,8 +190,11 @@ function renderWordGrid() {
     const catName = getCategoryName(word.cat);
     const learned = State.learnedWords.has(word.id);
     return `
-      <div class="word-card ${learned ? 'learned' : ''}" style="animation-delay:${i*0.03}s" onclick="openWordModal(${word.id})">
-        <div class="word-cat-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${catName}</div>
+      <div class="word-card speakable ${learned ? 'learned' : ''}" style="animation-delay:${i*0.03}s" data-speak="${word.cn}" onclick="openWordModal(${word.id})">
+        <div class="word-card-top">
+          <div class="word-cat-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${catName}</div>
+          <span class="speak-icon" title="Click to hear">🔊</span>
+        </div>
         <div class="word-chinese">${word.cn}</div>
         <div class="word-pinyin">${word.py}</div>
         <div class="word-english">${word.en}</div>
@@ -206,6 +209,7 @@ let currentModalWordId = null;
 function openWordModal(wordId) {
   const word = VOCABULARY.find(w => w.id === wordId);
   if (!word) return;
+  speakChinese(word.cn);
   currentModalWordId = wordId;
   const color = getCategoryColor(word.cat);
   document.getElementById('modal-chinese').textContent = word.cn;
@@ -368,8 +372,11 @@ function buildLessonHTML(lesson) {
       <div class="examples-section">
         <div class="section-subheader">Examples — Factory Floor Context</div>
         ${lesson.examples.map(ex => `
-          <div class="example-card">
-            <div class="example-cn">${ex.cn}</div>
+          <div class="example-card speakable" data-speak="${ex.cn}">
+            <div class="example-card-head">
+              <div class="example-cn">${ex.cn}</div>
+              <span class="speak-icon">🔊</span>
+            </div>
             <div class="example-py">${ex.py}</div>
             <div class="example-en">${ex.en}</div>
             <div class="example-breakdown">
@@ -382,8 +389,11 @@ function buildLessonHTML(lesson) {
         <div class="section-subheader">Key Words</div>
         <div class="keywords-grid">
           ${lesson.key_words.map(kw => `
-            <div class="keyword-card">
-              <div class="keyword-cn">${kw.cn}</div>
+            <div class="keyword-card speakable" data-speak="${kw.cn}">
+              <div class="keyword-cn-row">
+                <span class="keyword-cn">${kw.cn}</span>
+                <span class="speak-icon small">🔊</span>
+              </div>
               <div class="keyword-py">${kw.py}</div>
               <div class="keyword-en">${kw.en}</div>
             </div>`).join('')}
@@ -861,8 +871,11 @@ function filterPhrases(cat, btn) {
   btn.classList.add('active');
   const phrases = cat === 'all' ? PHRASEBOOK : PHRASEBOOK.filter(p => p.cat === cat);
   document.getElementById('phrase-list').innerHTML = phrases.map(p => `
-    <div class="phrase-item">
-      <div class="phrase-cn">${p.cn}</div>
+    <div class="phrase-item speakable" data-speak="${p.cn}">
+      <div class="phrase-top">
+        <div class="phrase-cn">${p.cn}</div>
+        <span class="speak-icon">🔊</span>
+      </div>
       <div class="phrase-pinyin">${p.py}</div>
       <div class="phrase-en">${p.en}</div>
       <div class="phrase-situation">${p.situation}</div>
@@ -973,6 +986,21 @@ document.addEventListener('DOMContentLoaded', () => {
     startListenSet(State.listen.activeSet.id);
   });
 
+  // Flashcard speak button
+  document.getElementById('fc-speak-btn').addEventListener('click', e => {
+    e.stopPropagation(); // prevent card flip
+    const card = State.fc.cards[State.fc.index];
+    if (card) speakChinese(card.cn);
+  });
+
+  // Modal speak button
+  document.getElementById('modal-speak').addEventListener('click', () => {
+    if (currentModalWordId) {
+      const word = VOCABULARY.find(w => w.id === currentModalWordId);
+      if (word) speakChinese(word.cn);
+    }
+  });
+
   // Keyboard
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
@@ -983,8 +1011,18 @@ document.addEventListener('DOMContentLoaded', () => {
   renderQuizStart();
 });
 
-// Close mobile nav on outside click
+// Global click delegation: speak any .speakable[data-speak] element
 document.addEventListener('click', e => {
+  // Speak delegation
+  const speakable = e.target.closest('.speakable[data-speak]');
+  if (speakable && speakable.dataset.speak) {
+    // speakChinese already called by openWordModal for vocab cards;
+    // for all other cards (phrasebook, grammar) speak here
+    const tag = speakable.tagName.toLowerCase();
+    const isVocabCard = speakable.classList.contains('word-card');
+    if (!isVocabCard) speakChinese(speakable.dataset.speak);
+  }
+  // Close mobile nav on outside click
   const nav = document.getElementById('main-nav');
   const hamburger = document.getElementById('hamburger');
   if (nav.classList.contains('open') && !nav.contains(e.target) && !hamburger.contains(e.target)) {
