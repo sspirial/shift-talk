@@ -61,6 +61,22 @@ function getFilteredVocab(catId) {
   return VOCABULARY.filter(w => w.cat === catId);
 }
 
+// ── Pinyin lookup — searches VOCABULARY then GRAMMAR_LESSONS key_words ──────
+const _pyCache = {};
+function getPinyin(cn) {
+  if (_pyCache[cn]) return _pyCache[cn];
+  // Check vocabulary
+  const vw = VOCABULARY.find(w => w.cn === cn);
+  if (vw) { _pyCache[cn] = vw.py; return vw.py; }
+  // Check all grammar key_words
+  for (const lesson of GRAMMAR_LESSONS) {
+    const kw = lesson.key_words.find(k => k.cn === cn);
+    if (kw) { _pyCache[cn] = kw.py; return kw.py; }
+  }
+  // Fallback: return empty (word will show without pinyin)
+  return '';
+}
+
 function saveState() {
   localStorage.setItem('learnedWords', JSON.stringify([...State.learnedWords]));
   localStorage.setItem('completedLessons', JSON.stringify([...State.completedLessons]));
@@ -400,38 +416,54 @@ function buildLessonHTML(lesson) {
         </div>
       </div>
 
-      <div class="exercises-section">
-        <div class="exercises-title">Practice Exercises</div>
-        <div class="exercises-sub">Complete all exercises to mark this lesson done</div>
-        ${lesson.exercises.map((ex, i) => buildExerciseHTML(ex, i, lesson.id)).join('')}
-      </div>
-
-      <div class="lesson-nav">
-        ${prevId ? `<button class="btn btn-ghost" onclick="openLesson(${prevId})">← Lesson ${prevId}</button>` : '<span></span>'}
-        ${nextId ? `<button class="btn btn-primary" onclick="openLesson(${nextId})">Lesson ${nextId} →</button>` : `<button class="btn btn-primary" onclick="switchView('listening')">Try Listening Lab →</button>`}
+      <div class="examples-section">
+        <div class="section-subheader">Exercises</div>
+        <div class="exercises-container">
+          ${lesson.exercises.map((ex, index) => buildExerciseHTML(ex, index, lesson.id)).join('')}
+        </div>
       </div>
     </div>`;
 }
 
 function buildExerciseHTML(ex, index, lessonId) {
   const exId = `ex-${lessonId}-${index}`;
+
   if (ex.type === 'fill') {
+    const choiceButtons = ex.choices.map(choice => {
+      const py = getPinyin(choice);
+      return `<button class="ex-choice-btn" data-ex="${exId}" data-choice="${choice}"
+        onclick="answerFill('${exId}','${choice}','${ex.answer.replace(/'/g,"\\'")}',${index},${lessonId})">
+        <span class="ex-choice-cn">${choice}</span>${py ? `<span class="ex-choice-py">${py}</span>` : ''}
+      </button>`;
+    }).join('');
     return `
       <div class="exercise-block" id="${exId}">
         <div class="exercise-num">Exercise ${index + 1} — Fill in the blank</div>
         <div class="exercise-prompt">${ex.prompt}</div>
-        <div class="ex-choices">
-          ${ex.choices.map(choice => `
-            <button class="ex-choice-btn" data-ex="${exId}" data-choice="${choice}" onclick="answerFill('${exId}', '${choice}', '${ex.answer.replace(/'/g,"\\'")}', ${index}, ${lessonId})">
-              ${choice}
-            </button>`).join('')}
-        </div>
+        <div class="ex-choices">${choiceButtons}</div>
         <div class="ex-feedback" id="${exId}-feedback">${ex.explanation}</div>
       </div>`;
   }
+
   if (ex.type === 'build') {
     const shuffled = shuffle([...ex.words]);
+    const tileBtns = shuffled.map((word, wi) => {
+      const py = getPinyin(word);
+      return `<button class="word-tile" id="${exId}-tile-${wi}" data-word="${word}"
+        onclick="placeTile('${exId}',${wi},'${word}',${JSON.stringify(ex.answer).replace(/'/g,"\\'")})">
+        <span class="tile-cn">${word}</span>${py ? `<span class="tile-py">${py}</span>` : ''}
+      </button>`;
+    }).join('');
     return `
+      <div class="exercise-block" id="${exId}">
+        <div class="exercise-num">Exercise ${index + 1} — Arrange the sentence</div>
+        <div class="exercise-prompt">${ex.prompt}</div>
+        <div class="build-target" id="${exId}-target">
+          <span class="build-placeholder">Click words below to place them here…</span>
+        </div>
+        <div class="word-tiles" id="${exId}-tiles">${tileBtns}</div>
+        ${ex.py ? `<div class="build-py-hint">Pinyin: <em>${ex.py}</em></div>` : ''}
+        <div class="build-actions">
       <div class="exercise-block" id="${exId}">
         <div class="exercise-num">Exercise ${index + 1} — Arrange the sentence</div>
         <div class="exercise-prompt">${ex.prompt}</div>
@@ -811,8 +843,15 @@ function renderQuizQuestion() {
   const choices = shuffle([question, ...wrongChoices]);
 
   document.getElementById('quiz-choices').innerHTML = choices.map(choice => {
-    const label = type === 'cn-to-en' ? choice.en : choice.cn;
-    return `<button class="choice-btn" onclick="answerQuiz(${choice.id}, ${question.id})">${label}</button>`;
+    if (type === 'cn-to-en') {
+      return `<button class="choice-btn" onclick="answerQuiz(${choice.id}, ${question.id})">${choice.en}</button>`;
+    } else {
+      // en-to-cn: show Chinese + pinyin below
+      return `<button class="choice-btn choice-btn--cn" onclick="answerQuiz(${choice.id}, ${question.id})">
+        <span class="qchoice-cn">${choice.cn}</span>
+        <span class="qchoice-py">${choice.py}</span>
+      </button>`;
+    }
   }).join('');
   State.quiz.answered = false;
 }

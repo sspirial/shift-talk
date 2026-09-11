@@ -2577,3 +2577,94 @@ body {
   opacity: 1;
   color: rgba(180,165,255,0.88);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PINYIN ON EXERCISES & QUIZ
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Fill exercise choice buttons ─────────────────────────────────────────── */
+.ex-choice-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.18rem;
+  min-height: 3.6rem; /* ensure room for both lines */
+}
+
+.ex-choice-cn {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(235,228,255,0.95);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.ex-choice-py {
+  font-size: 0.72rem;
+  color: rgba(185,170,255,0.75);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+/* ── Sentence builder word tiles ──────────────────────────────────────────── */
+.word-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.12rem;
+  min-height: 3.2rem;
+}
+
+.tile-cn {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(235,228,255,0.95);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.tile-py {
+  font-size: 0.65rem;
+  color: rgba(185,170,255,0.7);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+}
+
+/* ── Build exercise pinyin hint (shows full sentence pinyin) ─────────────── */
+.build-py-hint {
+  font-size: 0.78rem;
+  color: rgba(185,170,255,0.55);
+  font-style: italic;
+  padding: 0.4rem 0.6rem;
+  margin-top: -0.3rem;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.01em;
+}
+
+/* ── Quiz choices when showing Chinese (en-to-cn mode) ────────────────────── */
+.choice-btn--cn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 4rem;
+  padding: 0.6rem 1rem;
+}
+
+.qchoice-cn {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: rgba(235,228,255,0.97);
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.qchoice-py {
+  font-size: 0.75rem;
+  color: rgba(185,170,255,0.75);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
