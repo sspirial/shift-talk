@@ -1895,6 +1895,13 @@ body {
   cursor: pointer;
   transition: all var(--t-fast);
   text-align: center;
+  /* Stack Chinese + pinyin vertically */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 3.6rem;
 }
 
 .ex-choice-btn:hover:not(:disabled) {
@@ -1963,6 +1970,13 @@ body {
   cursor: pointer;
   transition: all var(--t-fast);
   user-select: none;
+  /* Stack Chinese + pinyin vertically */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  min-height: 3.2rem;
 }
 
 .word-tile:hover:not(.used) {
@@ -2582,39 +2596,9 @@ body {
    PINYIN ON EXERCISES & QUIZ
    ═══════════════════════════════════════════════════════════════════════════ */
 
+
 /* ── Fill exercise choice buttons ─────────────────────────────────────────── */
-.ex-choice-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.18rem;
-  min-height: 3.6rem; /* ensure room for both lines */
-}
 
-.ex-choice-cn {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: rgba(235,228,255,0.95);
-  letter-spacing: 0.04em;
-  line-height: 1.2;
-}
-
-.ex-choice-py {
-  font-size: 0.72rem;
-  color: rgba(185,170,255,0.75);
-  font-style: italic;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-}
-
-/* ── Sentence builder word tiles ──────────────────────────────────────────── */
-.word-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.12rem;
-  min-height: 3.2rem;
-}
 
 .tile-cn {
   font-size: 1rem;
